@@ -1,0 +1,22 @@
+{
+  "name": "gettutoravailability",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel src -d lib",
+    "index": "babel-node --presets env index.js",
+    "app": "babel-node --presets env app.js"
+  },
+  "author": "Alfred Madere",
+  "license": "ISC",
+  "dependencies": {
+    "babel-cli": "^6.26.0",
+    "googleapis": "^67.0.0",
+    "luxon": "^1.25.0"
+  },
+  "devDependencies": {
+    "babel-preset-env": "^1.7.0"
+  }
+}
