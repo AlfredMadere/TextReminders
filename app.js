@@ -1,13 +1,27 @@
-const googleDriver = require("./drivers/googleCalDriver");
-const CalEvent = require("./models/CalEvent");
+const sendMorningReminders = require("./controllers/reminderController");
+const CronJob = require("cron").CronJob;
+const usTimeZones = require("./lookUpTables/usTimeZones");
 
-googleDriver
-  .getEvents([
-    /^Host one/i,
-    /^Host two/i,
-    /^Host three/i,
-    /^Ivy Advantage Corporate/i,
-  ])
-  .then((res) => {
-    new CalEvent(res[0]);
-  });
+sendMorningReminders("America/Chicago");
+
+const job = new CronJob(
+  "0 9 * * *",
+  sendMorningReminders,
+  null,
+  true,
+  "America/Los_Angeles"
+);
+job.start();
+/*
+var CronJob = require("cron").CronJob;
+var job = new CronJob(
+  "* * * * * *",
+  function () {
+    console.log("You will see this message every second");
+  },
+  null,
+  true,
+  "America/Los_Angeles"
+);
+job.start();
+*/

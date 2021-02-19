@@ -13,8 +13,11 @@
   "license": "ISC",
   "dependencies": {
     "babel-cli": "^6.26.0",
+    "cron": "^1.8.2",
     "googleapis": "^67.0.0",
-    "luxon": "^1.25.0"
+    "luxon": "^1.25.0",
+    "moment": "^2.29.1",
+    "moment-timezone": "^0.5.33"
   },
   "devDependencies": {
     "babel-preset-env": "^1.7.0"

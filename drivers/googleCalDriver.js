@@ -19,13 +19,11 @@ const googleCalendar = google.calendar({ version: "v3", auth: oAuth2Client });
 let googleDriver = {};
 
 //returns ordered list of events from all calendars selected
-function getEvents(regexs) {
-  const startTime = new Date();
-  const endTime = new Date(startTime.getTime() + 60 * 60 * 24 * 1000);
+function getEvents(params) {
   return Promise.all(
-    regexs.map((calRegex) => {
+    params.calendarNamePatterns.map((calRegex) => {
       return getCalendarId(calRegex).then((id) => {
-        return listEvents(id, "", startTime, endTime);
+        return listEvents(id, "", params.startTime, params.endTime);
       });
     })
   ).then((eventLists) => {
