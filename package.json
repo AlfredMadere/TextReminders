@@ -13,10 +13,10 @@
   "author": "Alfred Madere",
   "license": "ISC",
   "dependencies": {
-    "babel-cli": "^6.26.0",
+    "babel-cli": "^6.18.0",
     "clicksend": "^5.0.37",
     "cron": "^1.8.2",
-    "googleapis": "^39.2.0",
+    "googleapis": "^67.1.0",
     "luxon": "^1.25.0",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.33",

@@ -1,6 +1,6 @@
 const sendText = (params) => {
   console.log(
-    `texting ${params.attendeeType} ${params.attendee} ${params.number}: ${params.message}`
+    `(type: ${params.type}) texting ${params.attendeeType} ${params.attendee} ${params.number}: ${params.message}`
   );
 };
 

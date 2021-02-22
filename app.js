@@ -2,13 +2,18 @@ const { sendMorningReminders } = require("./controllers/reminderController");
 const { sendLastReminder } = require("./controllers/reminderController");
 const CronJob = require("cron").CronJob;
 const usTimeZones = require("./lookUpTables/usTimeZones");
+const Tutor = require("./models/Tutor");
+const Student = require("./models/Student");
 
 let timeZone = "America/Chicago";
-sendMorningReminders(timeZone);
 
+Tutor.populateCache();
+Student.populateCache();
+//sendLastReminder({ leadTime: 20 });
+/*
 usTimeZones.forEach((tz) => {
   const job = new CronJob(
-    "30 20 * * *",
+    "0 9 * * *",
     () => {
       sendMorningReminders(tz);
     },
@@ -20,12 +25,13 @@ usTimeZones.forEach((tz) => {
 });
 
 const job = new CronJob(
-  "0,10,20,30,40,50 * * * *",
+  "* * * * *",
   () => {
-    sendLastReminder({ leadTime: 15 });
+    sendLastReminder({ leadTime: 20 });
   },
   null,
   true,
   timeZone
 );
 job.start();
+*/

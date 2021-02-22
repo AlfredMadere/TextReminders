@@ -1,9 +1,9 @@
 const googleDriver = require("../drivers/googleCalDriver");
-const sendText = require("../drivers/sendClickDriver");
+const sendText = require("../drivers/twilioDriver");
 const TutoringSession = require("../models/TutoringSession");
 import moment from "moment-timezone";
-moment().tz("America/Los_Angeles").format();
 
+const sentLastReminders = {};
 const sendMorningReminders = async (tz) => {
   const sessionsToday = await getTodaysSessions();
   sessionsToday.forEach((session) => {
@@ -13,41 +13,66 @@ const sendMorningReminders = async (tz) => {
 };
 
 const sendLastReminder = async (params) => {
+  const type = "last reminder";
   const startTime = new Date();
   const endTime = new Date(startTime.getTime() + params.leadTime * 60 * 1000);
-  const upcommingSessions = await getSessionsBetween(startTime, endTime);
+  const upcommingSessions = await getSessionsStartingBetween(
+    startTime,
+    endTime
+  );
+
   if (upcommingSessions.length) {
     upcommingSessions.forEach((session) => {
-      sendText({
-        number: session.tutor.tutorNumber,
-        message: session.tutorTextReminder(),
-        attendeeType: "tutor",
-        attendee: session.tutor.tutorName,
-      });
-      sendText({
-        number: session.student.studentNumber,
-        message: session.studentTextReminder(),
-        attendeeType: "student",
-        attendee: session.student.studentName,
-      });
-      sendText({
-        number: session.student.parentNumber,
-        message: session.studentTextReminder(),
-        attendeeType: "parent",
-        attendee: session.student.parentName,
-      });
+      const parentReminderId =
+        session.id + session.student.parentNumber + session.startTime;
+      const studentReminderId =
+        session.id + session.student.studentNumber + session.startTime;
+      const tutorReminderId =
+        session.id + session.student.tutorNumber + session.startTime;
+      if (!(tutorReminderId in sentLastReminders)) {
+        sendText({
+          number: session.tutor.tutorNumber,
+          message: session.tutorReminderText(),
+          attendeeType: "tutor",
+          attendee: session.tutor.tutorName,
+          type: type,
+        });
+        sentLastReminders[tutorReminderId] = 1;
+      }
+      if (!(studentReminderId in sentLastReminders)) {
+        sendText({
+          number: session.student.studentNumber,
+          message: session.studentReminderText(),
+          attendeeType: "student",
+          attendee: session.student.studentName,
+          type: type,
+        });
+        sentLastReminders[studentReminderId] = 1;
+      }
+      if (!(parentReminderId in sentLastReminders)) {
+        sendText({
+          number: session.student.parentNumber,
+          message: session.studentReminderText(),
+          attendeeType: "parent",
+          attendee: session.student.parentName,
+          type: type,
+        });
+        sentLastReminders[parentReminderId] = 1;
+      }
     });
   }
 };
 const textParticipantsInTz = (session, tz) => {
+  const type = "morning reminder";
   if (
     moment.tz(session.tutor.timeZone).utcOffset() == moment.tz(tz).utcOffset()
   ) {
     sendText({
       number: session.tutor.tutorNumber,
-      message: session.tutorTextReminder(),
+      message: session.tutorReminderText(),
       attendeeType: "tutor",
       attendee: session.tutor.tutorName,
+      type: type,
     });
   } else {
     console.log("tutor not texted");
@@ -57,43 +82,48 @@ const textParticipantsInTz = (session, tz) => {
   ) {
     sendText({
       number: session.student.studentNumber,
-      message: session.studentTextReminder(),
+      message: session.studentReminderText(),
       attendeeType: "student",
       attendee: session.student.studentName,
+      type: type,
     });
     sendText({
       number: session.student.parentNumber,
-      message: session.studentTextReminder(),
+      message: session.studentReminderText(),
       attendeeType: "parent",
       attendee: session.student.parentName,
+      type: type,
     });
   } else {
     console.log("student and parent not texted");
   }
 };
 
-const getSessionsBetween = async (startTime, endTime) => {
+const getSessionsStartingBetween = async (startTime, endTime) => {
   const rawEventList = await googleDriver.getEvents({
     calendarNamePatterns: [
       /^Host one/i,
       /^Host two/i,
       /^Host three/i,
       /^Ivy Advantage Corporate/i,
-      /^Api tester/i,
     ],
     startTime: startTime,
     endTime: endTime,
   });
-  const sessionsBetween = rawEventList.map((event) => {
-    return new TutoringSession(event);
-  });
+  const sessionsBetween = rawEventList
+    .filter((x) => {
+      return Date.parse(x.start.dateTime) > startTime.getTime();
+    })
+    .map((event) => {
+      return new TutoringSession(event);
+    });
   return Promise.resolve(sessionsBetween);
 };
 
 const getTodaysSessions = () => {
   const startTime = new Date();
   let endTime = new Date(startTime.getTime() + 60 * 60 * 24 * 1000);
-  return getSessionsBetween(startTime, endTime);
+  return getSessionsStartingBetween(startTime, endTime);
 };
 
 module.exports = { sendMorningReminders, sendLastReminder };

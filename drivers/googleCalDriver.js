@@ -2,16 +2,18 @@ const { google } = require("googleapis");
 
 const { OAuth2 } = google.auth;
 
-const oAuth2Client = new OAuth2(
-  "286187659171-8lsogbilkvskbk0aojikls0ml28r7n2e.apps.googleusercontent.com",
-  "ValmFXd__39RdlBcIGQPPrJd"
-);
+const {
+  oAuthCred1,
+  oAuthCred2,
+  refreshToken,
+} = require("../credentials/googleCalendar/googleCalendarCredentials");
+
+const oAuth2Client = new OAuth2(oAuthCred1, oAuthCred2);
 
 const waitUntil = require("../util/waitUntil").default;
 
 oAuth2Client.setCredentials({
-  refresh_token:
-    "1//04GH7dnAYumD5CgYIARAAGAQSNwF-L9Irf239SgxhBrkflGAfsFMpkD1k2_-bYhDfVFJlP0-5ofRUDCmlQF_ZIokJi9jbtM0RmrU",
+  refresh_token: refreshToken,
 });
 
 const googleCalendar = google.calendar({ version: "v3", auth: oAuth2Client });
