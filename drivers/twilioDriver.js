@@ -4,6 +4,7 @@ const authToken = "96bec47ee7b42b7a8f68d7daa33bb46a";
 const client = require("twilio")(accountSid, authToken);
 
 const sendText = (params) => {
+  console.log("send text params", params);
   client.messages
     .create({
       to: params.number,

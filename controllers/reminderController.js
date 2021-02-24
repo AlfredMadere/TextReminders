@@ -1,9 +1,28 @@
 const googleDriver = require("../drivers/googleCalDriver");
 const sendText = require("../drivers/twilioDriver");
 const TutoringSession = require("../models/TutoringSession");
+const sentRemindersCache = require("../lookUpTables/sentReminders.json");
+const fs = require("fs");
 import moment from "moment-timezone";
 
-const sentLastReminders = {};
+let sentReminders = {};
+
+const updateSentReminderCache = (sR) => {
+  fs.writeFile(
+    "./lookUpTables/sentReminders.json",
+    JSON.stringify(sR),
+    (err) => {
+      if (err) throw err;
+
+      console.log("done writing");
+    }
+  );
+};
+
+const updateSentRemindersFromCache = () => {
+  sentReminders = Object.assign({}, sentRemindersCache);
+};
+
 const sendMorningReminders = async (tz) => {
   const sessionsToday = await getTodaysSessions();
   sessionsToday.forEach((session) => {
@@ -16,6 +35,7 @@ const sendLastReminder = async (params) => {
   const type = "last reminder";
   const startTime = new Date();
   const endTime = new Date(startTime.getTime() + params.leadTime * 60 * 1000);
+
   const upcommingSessions = await getSessionsStartingBetween(
     startTime,
     endTime
@@ -23,33 +43,39 @@ const sendLastReminder = async (params) => {
 
   if (upcommingSessions.length) {
     upcommingSessions.forEach((session) => {
-      const parentReminderId =
-        session.id + session.student.parentNumber + session.startTime;
+      if (!session.student) {
+        console.log("null student", session);
+      }
+      if (!session.tutor) {
+        console.log("null tutor", session);
+      }
+      const parentReminderId = `${session.id}${session.student.parentNumber}${session.startTime}`;
       const studentReminderId =
         session.id + session.student.studentNumber + session.startTime;
       const tutorReminderId =
         session.id + session.student.tutorNumber + session.startTime;
-      if (!(tutorReminderId in sentLastReminders)) {
+      if (!(tutorReminderId in sentReminders)) {
         sendText({
-          number: session.tutor.tutorNumber,
+          number: session.tutor.number,
           message: session.tutorReminderText(),
           attendeeType: "tutor",
-          attendee: session.tutor.tutorName,
+          attendee: session.tutor.name,
           type: type,
         });
-        sentLastReminders[tutorReminderId] = 1;
+        sentReminders[tutorReminderId] = 1;
       }
-      if (!(studentReminderId in sentLastReminders)) {
-        sendText({
-          number: session.student.studentNumber,
-          message: session.studentReminderText(),
-          attendeeType: "student",
-          attendee: session.student.studentName,
-          type: type,
-        });
-        sentLastReminders[studentReminderId] = 1;
+      if (!(studentReminderId in sentReminders)) {
+        session.student.studentNumber &&
+          sendText({
+            number: session.student.studentNumber,
+            message: session.studentReminderText(),
+            attendeeType: "student",
+            attendee: session.student.studentName,
+            type: type,
+          });
+        sentReminders[studentReminderId] = 1;
       }
-      if (!(parentReminderId in sentLastReminders)) {
+      if (!(parentReminderId in sentReminders)) {
         sendText({
           number: session.student.parentNumber,
           message: session.studentReminderText(),
@@ -57,8 +83,9 @@ const sendLastReminder = async (params) => {
           attendee: session.student.parentName,
           type: type,
         });
-        sentLastReminders[parentReminderId] = 1;
+        sentReminders[parentReminderId] = 1;
       }
+      updateSentReminderCache(sentReminders);
     });
   }
 };
@@ -68,10 +95,10 @@ const textParticipantsInTz = (session, tz) => {
     moment.tz(session.tutor.timeZone).utcOffset() == moment.tz(tz).utcOffset()
   ) {
     sendText({
-      number: session.tutor.tutorNumber,
+      number: session.tutor.number,
       message: session.tutorReminderText(),
       attendeeType: "tutor",
-      attendee: session.tutor.tutorName,
+      attendee: session.tutor.name,
       type: type,
     });
   } else {
@@ -80,13 +107,14 @@ const textParticipantsInTz = (session, tz) => {
   if (
     moment.tz(session.student.timeZone).utcOffset() == moment.tz(tz).utcOffset()
   ) {
-    sendText({
-      number: session.student.studentNumber,
-      message: session.studentReminderText(),
-      attendeeType: "student",
-      attendee: session.student.studentName,
-      type: type,
-    });
+    session.student.studentNumber &&
+      sendText({
+        number: session.student.studentNumber,
+        message: session.studentReminderText(),
+        attendeeType: "student",
+        attendee: session.student.studentName,
+        type: type,
+      });
     sendText({
       number: session.student.parentNumber,
       message: session.studentReminderText(),
@@ -106,6 +134,7 @@ const getSessionsStartingBetween = async (startTime, endTime) => {
       /^Host two/i,
       /^Host three/i,
       /^Ivy Advantage Corporate/i,
+      /^Api tester/i,
     ],
     startTime: startTime,
     endTime: endTime,
@@ -117,6 +146,7 @@ const getSessionsStartingBetween = async (startTime, endTime) => {
     .map((event) => {
       return new TutoringSession(event);
     });
+  console.log("Sessions between", sessionsBetween);
   return Promise.resolve(sessionsBetween);
 };
 
@@ -126,4 +156,8 @@ const getTodaysSessions = () => {
   return getSessionsStartingBetween(startTime, endTime);
 };
 
-module.exports = { sendMorningReminders, sendLastReminder };
+module.exports = {
+  sendMorningReminders,
+  sendLastReminder,
+  updateSentRemindersFromCache,
+};

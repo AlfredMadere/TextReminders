@@ -15,27 +15,27 @@ class Student {
 Student.cache = {};
 
 Student.populateCache = () => {
-  getDataFor("student", (rows) => {
-    if (rows.length) {
-      let newCache = {};
-      console.log("in");
-      rows.forEach((row) => {
-        newCache[row[0]] = new Student({
-          studentName: row[1],
-          studentNumber: row[2],
-          studentEmail: row[3],
-          parentName: row[4],
-          parentNumber: row[5],
-          parentEmail: row[6],
-          timezone: row[7],
+  return getDataFor("student")
+    .then((rows) => {
+      if (rows.length) {
+        let newCache = {};
+        rows.forEach((row) => {
+          newCache[row[0]] = new Student({
+            studentName: row[1],
+            studentNumber: row[2],
+            studentEmail: row[3],
+            parentName: row[4],
+            parentNumber: row[5],
+            parentEmail: row[6],
+            timezone: row[7],
+          });
         });
-      });
-      Student.cache = newCache;
-      console.log(Student.cache);
-    } else {
-      console.log("No data found.");
-    }
-  });
+        Student.cache = newCache;
+      } else {
+        console.log("No data found.");
+      }
+    })
+    .catch((err) => console.log(err));
 };
 
 Student.find = (name) => {

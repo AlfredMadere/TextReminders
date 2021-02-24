@@ -5,7 +5,7 @@ const { google } = require("googleapis");
 const spreadsheets = {
   tutor: {
     spreadsheetId: "15aejZCoyUjoSl83goXfejzAyAGOMbOHDPzSnVlQ8BJ4",
-    range: "Sheet1!A12:E",
+    range: "Sheet1!A2:E11",
   },
   student: {
     spreadsheetId: "1qG00kP86res-XgfH0fLlube8mWBsHMPS_DDHVAuKarw",
@@ -115,21 +115,26 @@ const withAuth = (callback) => {
     );
   }
 };
-const getDataFor = (modelType, dataHandler) => {
-  withAuth((auth) => {
-    const sheets = google.sheets({ version: "v4", auth });
-    if (!spreadsheets[modelType]) {
-      throw "invalid spreadsheet modeltype " + modelType;
-    }
-    sheets.spreadsheets.values.get(spreadsheets[modelType], (err, res) => {
-      if (err) return console.log("The API returned an error: " + err);
-      console.log(res.data.values);
-      const rows = res.data.values.map((row) => {
-        return row.map((cell) => {
-          return cell === "" ? undefined : cell;
-        });
+const getDataFor = (modelType) => {
+  return new Promise((resolve, reject) => {
+    withAuth((auth) => {
+      const sheets = google.sheets({ version: "v4", auth });
+      if (!spreadsheets[modelType]) {
+        throw "invalid spreadsheet modeltype " + modelType;
+      }
+      sheets.spreadsheets.values.get(spreadsheets[modelType], (err, res) => {
+        if (err) {
+          reject("The API returned an error: " + err);
+        } else {
+          const rows = res.data.values.map((row) => {
+            return row.map((cell) => {
+              return cell === "" ? undefined : cell;
+            });
+          });
+          console.log("Data recieved from sheet", rows);
+          resolve(rows);
+        }
       });
-      dataHandler(rows);
     });
   });
 };
