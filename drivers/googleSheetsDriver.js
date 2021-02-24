@@ -131,7 +131,6 @@ const getDataFor = (modelType) => {
               return cell === "" ? undefined : cell;
             });
           });
-          console.log("Data recieved from sheet", rows);
           resolve(rows);
         }
       });

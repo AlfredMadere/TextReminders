@@ -50,7 +50,6 @@ const getCalendarId = async function (calMatch) {
   }, 3000);
   for (let i = 0; i < calendarList.length; i++) {
     let cal = calendarList[i];
-    //console.log(cal.summary, cal.id);
     if (cal.summary.match(calMatch)) {
       return Promise.resolve(cal.id);
     }

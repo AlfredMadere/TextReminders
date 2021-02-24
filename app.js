@@ -11,9 +11,6 @@ const Student = require("./models/Student");
 let timeZone = "America/Chicago";
 
 Promise.all([Tutor.populateCache(), Student.populateCache()]).then(() => {
-  console.log("student cache", Student.cache);
-  console.log("tutor cache", Tutor.cache);
-
   updateSentRemindersFromCache();
   sendLastReminder({ leadTime: 20 });
 

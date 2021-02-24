@@ -13,8 +13,6 @@ const updateSentReminderCache = (sR) => {
     JSON.stringify(sR),
     (err) => {
       if (err) throw err;
-
-      console.log("done writing");
     }
   );
 };
@@ -31,6 +29,17 @@ const sendMorningReminders = async (tz) => {
   return Promise.resolve(true);
 };
 
+const sendAndRecordText = (params) => {
+  sendText({
+    number: params.session.tutor.number,
+    message: params.session.tutorReminderText(),
+    attendeeType: params.attendeeType,
+    attendee: params.session.tutor.name,
+    type: params.type,
+  });
+  sentReminders[params.reminderId] = 1;
+};
+
 const sendLastReminder = async (params) => {
   const type = "last reminder";
   const startTime = new Date();
@@ -45,45 +54,45 @@ const sendLastReminder = async (params) => {
     upcommingSessions.forEach((session) => {
       if (!session.student) {
         console.log("null student", session);
+        throw "null student";
       }
       if (!session.tutor) {
         console.log("null tutor", session);
+        throw "null tutor";
       }
       const parentReminderId = `${session.id}${session.student.parentNumber}${session.startTime}`;
       const studentReminderId =
         session.id + session.student.studentNumber + session.startTime;
       const tutorReminderId =
-        session.id + session.student.tutorNumber + session.startTime;
+        session.id +
+        session.tutor.number +
+        session.startTime +
+        session.tutor.name;
       if (!(tutorReminderId in sentReminders)) {
-        sendText({
-          number: session.tutor.number,
-          message: session.tutorReminderText(),
+        sendAndRecordText({
+          session: session,
           attendeeType: "tutor",
-          attendee: session.tutor.name,
           type: type,
+          reminderId: tutorReminderId,
         });
-        sentReminders[tutorReminderId] = 1;
       }
       if (!(studentReminderId in sentReminders)) {
         session.student.studentNumber &&
-          sendText({
-            number: session.student.studentNumber,
-            message: session.studentReminderText(),
+          sendAndRecordText({
+            session: session,
             attendeeType: "student",
-            attendee: session.student.studentName,
             type: type,
+            reminderId: studentReminderId,
           });
-        sentReminders[studentReminderId] = 1;
       }
       if (!(parentReminderId in sentReminders)) {
-        sendText({
-          number: session.student.parentNumber,
-          message: session.studentReminderText(),
-          attendeeType: "parent",
-          attendee: session.student.parentName,
-          type: type,
-        });
-        sentReminders[parentReminderId] = 1;
+        session.student.parentNumber &&
+          sendAndRecordText({
+            session: session,
+            attendeeType: "parent",
+            type: type,
+            reminderId: parentReminderId,
+          });
       }
       updateSentReminderCache(sentReminders);
     });
@@ -102,7 +111,9 @@ const textParticipantsInTz = (session, tz) => {
       type: type,
     });
   } else {
-    console.log("tutor not texted");
+    console.log(
+      `tutor ${session.tutor.name} not texted for ${session.student.studentName}'s session`
+    );
   }
   if (
     moment.tz(session.student.timeZone).utcOffset() == moment.tz(tz).utcOffset()
@@ -123,7 +134,9 @@ const textParticipantsInTz = (session, tz) => {
       type: type,
     });
   } else {
-    console.log("student and parent not texted");
+    console.log(
+      `student ${session.student.studentName} and parent ${session.student.parentName} not texted for session with ${session.tutor.name}`
+    );
   }
 };
 
@@ -146,7 +159,6 @@ const getSessionsStartingBetween = async (startTime, endTime) => {
     .map((event) => {
       return new TutoringSession(event);
     });
-  console.log("Sessions between", sessionsBetween);
   return Promise.resolve(sessionsBetween);
 };
 
