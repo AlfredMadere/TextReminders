@@ -1,4 +1,5 @@
-const getDataFor = require("../drivers/googleSheetsDriver");
+//const getDataFor = require("../drivers/googleSheetsDriver");
+import getDataFor from "../drivers/googleSheetsDriver.js";
 
 class Student {
   constructor(params) {
@@ -31,6 +32,7 @@ Student.populateCache = () => {
           });
         });
         Student.cache = newCache;
+        console.log("student Cache", Student.cache);
       } else {
         console.log("No data found.");
       }
@@ -42,4 +44,4 @@ Student.find = (name) => {
   return Student.cache[name];
 };
 
-module.exports = Student;
+export default Student;

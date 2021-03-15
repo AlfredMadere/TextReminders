@@ -1,54 +1,69 @@
+/*
 const {
   sendMorningReminders,
   sendLastReminder,
   updateSentRemindersFromCache,
 } = require("./controllers/reminderController");
-const CronJob = require("cron").CronJob;
-const usTimeZones = require("./lookUpTables/usTimeZones");
-const Tutor = require("./models/Tutor");
-const Student = require("./models/Student");
+*/
+import sendMorningReminders from "./controllers/reminderController.js";
+import {
+  sendLastReminder,
+  updateSentRemindersFromCache,
+} from "./controllers/reminderController.js";
+//const CronJob = require("cron").CronJob;
+import cj from "cron";
+const CronJob = cj.CronJob;
+//const usTimeZones = require("./lookUpTables/usTimeZones");
+import usTimeZones from "./lookUpTables/usTimeZones.js";
+//const Tutor = require("./models/Tutor");
+import Tutor from "./models/Tutor.js";
+//const Student = require("./models/Student");
+import Student from "./models/Student.js";
 
 let timeZone = "America/Chicago";
 
-Promise.all([Tutor.populateCache(), Student.populateCache()]).then(() => {
-  updateSentRemindersFromCache();
-  sendLastReminder({ leadTime: 20 });
+Promise.all([Tutor.populateCache(), Student.populateCache()])
+  .then(() => {
+    return updateSentRemindersFromCache();
+  })
+  .then(() => {
+    sendLastReminder({ leadTime: 20 });
 
-  const attendeeCacheUpdater = new CronJob(
-    "0 1 * * *",
-    () => {
-      Tutor.populateCache();
-      Student.populateCache();
-    },
-    null,
-    true,
-    timeZone
-  );
-  attendeeCacheUpdater.start();
-
-  sendLastReminder({ leadTime: 20 });
-
-  usTimeZones.forEach((tz) => {
-    const morningReminders = new CronJob(
-      "0 9 * * *",
+    const attendeeCacheUpdater = new CronJob(
+      "0 1 * * *",
       () => {
-        sendMorningReminders(tz);
+        Tutor.populateCache();
+        Student.populateCache();
       },
       null,
       true,
-      tz
+      timeZone
     );
-    morningReminders.start();
-  });
+    attendeeCacheUpdater.start();
 
-  const lastReminders = new CronJob(
-    "* * * * *",
-    () => {
-      sendLastReminder({ leadTime: 20 });
-    },
-    null,
-    true,
-    timeZone
-  );
-  lastReminders.start();
-});
+    sendLastReminder({ leadTime: 20 });
+
+    usTimeZones.forEach((tz) => {
+      const morningReminders = new CronJob(
+        "0 9 * * *",
+        () => {
+          sendMorningReminders(tz);
+        },
+        null,
+        true,
+        tz
+      );
+      morningReminders.start();
+    });
+
+    const lastReminders = new CronJob(
+      "* * * * *",
+      () => {
+        sendLastReminder({ leadTime: 20 });
+      },
+      null,
+      true,
+      timeZone
+    );
+    lastReminders.start();
+  });

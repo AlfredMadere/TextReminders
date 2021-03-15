@@ -1,6 +1,9 @@
-const Student = require("../models/Student");
-const Tutor = require("../models/Tutor");
-const { DateTime } = require("luxon");
+//const Student = require("../models/Student");
+import Student from "../models/Student.js";
+//const Tutor = require("../models/Tutor");
+import Tutor from "../models/Tutor.js";
+//const { DateTime } = require("luxon");
+import { DateTime } from "luxon";
 
 class TutoringSession {
   constructor(googleCalEvent) {
@@ -16,14 +19,14 @@ class TutoringSession {
   }
   tutorReminderText() {
     return this.reminderText({
-      recipientTimezone: this.tutor.timeZone,
+      recipientTimezone: this.tutor.timezone,
       otherParticipant: this.student.studentName,
     });
   }
   studentReminderText() {
     return this.reminderText({
-      recipientTimezone: this.student.timeZone,
-      otherParticipant: this.tutor.tutorName,
+      recipientTimezone: this.student.timezone,
+      otherParticipant: this.tutor.name,
     });
   }
   //write reminder text function
@@ -37,4 +40,4 @@ class TutoringSession {
   }
 }
 
-module.exports = TutoringSession;
+export default TutoringSession;

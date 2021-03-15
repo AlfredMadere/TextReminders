@@ -1,4 +1,5 @@
-const getDataFor = require("../drivers/googleSheetsDriver");
+//const getDataFor = require("../drivers/googleSheetsDriver");
+import getDataFor from "../drivers/googleSheetsDriver.js";
 
 class Tutor {
   constructor(params) {
@@ -36,4 +37,4 @@ Tutor.populateCache = () => {
     .catch((err) => console.log(err));
 };
 
-module.exports = Tutor;
+export default Tutor;

@@ -1,6 +1,5 @@
 import { google } from "googleapis";
-import { downloadFromAWS } from "../drivers/awsDriver.js";
-import { googleSheetsCredentialsKey } from "../quickTests/populateCredentials.js";
+import { downloadCredentialsFromAWS } from "../drivers/awsDriver.js";
 const { OAuth2 } = google.auth;
 
 const spreadsheets = {
@@ -13,13 +12,13 @@ const spreadsheets = {
     range: "Sheet1!A3:H",
   },
 };
+
 let googleSheets = null;
 let googleSheetsCredentials = null;
 
 const getGoogleSheetsCredentials = async () => {
-  googleSheetsCredentials ||= await downloadFromAWS(
-    googleSheetsCredentialsKey,
-    "apicredentials"
+  googleSheetsCredentials ||= await downloadCredentialsFromAWS(
+    "testSheetCreds"
   );
   return googleSheetsCredentials;
 };
@@ -67,4 +66,4 @@ const getDataFor = (modelType) => {
     .catch((err) => console.log(err));
 };
 
-export default getDataFor;
+getDataFor("tutor").then((rows) => console.log("rows", rows));

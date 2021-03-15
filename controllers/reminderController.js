@@ -1,24 +1,37 @@
-const googleDriver = require("../drivers/googleCalDriver");
-const sendText = require("../drivers/twilioDriver");
-const TutoringSession = require("../models/TutoringSession");
-const sentRemindersCache = require("../lookUpTables/sentReminders.json");
-const fs = require("fs");
+//const googleDriver = require("../drivers/googleCalDriver");
+import googleDriver from "../drivers/googleCalDriver.js";
+//const sendText = require("../drivers/twilioDriver");
+import sendText from "../drivers/twilioDriver.js";
+//const TutoringSession = require("../models/TutoringSession");
+import TutoringSession from "../models/TutoringSession.js";
+import uploadToAWS from "../drivers/awsDriver.js";
+import { downloadFromAWS } from "../drivers/awsDriver.js";
+import { textReminderCacheKey } from "../quickTests/populateCredentials.js";
+//const sentRemindersCache = require("../lookUpTables/sentReminders.json");
+//const fs = require("fs");
+import fs from "fs";
 import moment from "moment-timezone";
 
 let sentReminders = {};
 
-const updateSentReminderCache = (sR) => {
-  fs.writeFile(
-    "./lookUpTables/sentReminders.json",
+//Need to get cache working
+const updateSentReminderCache = async (sR) => {
+  const uploadedTingos = await uploadToAWS(
     JSON.stringify(sR),
-    (err) => {
-      if (err) throw err;
-    }
+    textReminderCacheKey,
+    "reminderappcache"
   );
+  return uploadedTingos;
 };
 
-const updateSentRemindersFromCache = () => {
-  sentReminders = Object.assign({}, sentRemindersCache);
+const updateSentRemindersFromCache = async () => {
+  //i should have a check here to make sure that remindertextcache exists and create it if it doesn't
+  const sentRemindersString = await downloadFromAWS(
+    textReminderCacheKey,
+    "reminderappcache"
+  );
+  sentReminders = JSON.parse(sentRemindersString);
+  return sentReminders;
 };
 
 const sendMorningReminders = async (tz) => {
@@ -31,10 +44,27 @@ const sendMorningReminders = async (tz) => {
 
 const sendAndRecordText = (params) => {
   sendText({
-    number: params.session.tutor.number,
-    message: params.session.tutorReminderText(),
+    number:
+      params.attendeeType === "tutor"
+        ? params.session.tutor.number
+        : params.attendeeType === "student"
+        ? params.session.student.studentNumber
+        : params.attendeeType === "parent"
+        ? params.session.student.parentNumber
+        : "fuck",
+    message:
+      params.attendeeType === "tutor"
+        ? params.session.tutorReminderText()
+        : params.session.studentReminderText(),
     attendeeType: params.attendeeType,
-    attendee: params.session.tutor.name,
+    attendee:
+      params.attendeeType === "tutor"
+        ? params.session.tutor.name
+        : params.attendeeType === "student"
+        ? params.session.student.studentName
+        : params.attendeeType === "parent"
+        ? params.session.student.parentName
+        : "fuck",
     type: params.type,
   });
   sentReminders[params.reminderId] = 1;
@@ -49,9 +79,8 @@ const sendLastReminder = async (params) => {
     startTime,
     endTime
   );
-
   if (upcommingSessions.length) {
-    upcommingSessions.forEach((session) => {
+    upcommingSessions.forEach(async (session) => {
       if (!session.student) {
         console.log("null student", session);
         throw "null student";
@@ -94,7 +123,8 @@ const sendLastReminder = async (params) => {
             reminderId: parentReminderId,
           });
       }
-      updateSentReminderCache(sentReminders);
+      const updatedReminders = await updateSentReminderCache(sentReminders);
+      return updatedReminders;
     });
   }
 };
@@ -168,8 +198,5 @@ const getTodaysSessions = () => {
   return getSessionsStartingBetween(startTime, endTime);
 };
 
-module.exports = {
-  sendMorningReminders,
-  sendLastReminder,
-  updateSentRemindersFromCache,
-};
+export default sendMorningReminders;
+export { sendLastReminder, updateSentRemindersFromCache };
