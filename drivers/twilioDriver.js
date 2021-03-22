@@ -17,7 +17,6 @@ const getTwilioClient = async () => {
   if (!twilioCredentials) {
     try {
       twilioCredentials ||= await getTwilioCredentials();
-      console.log("twilioCredentials", twilioCredentials);
       twilioClient = new twilio(
         twilioCredentials.accountSid,
         twilioCredentials.authToken

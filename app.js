@@ -27,7 +27,7 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
     return updateSentRemindersFromCache();
   })
   .then(() => {
-    sendLastReminder({ leadTime: 20 });
+    sendLastReminder({ leadTime: 30 });
 
     const attendeeCacheUpdater = new CronJob(
       "0 1 * * *",

@@ -32,7 +32,6 @@ Student.populateCache = () => {
           });
         });
         Student.cache = newCache;
-        console.log("student Cache", Student.cache);
       } else {
         console.log("No data found.");
       }
