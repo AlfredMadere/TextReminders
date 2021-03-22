@@ -194,7 +194,7 @@ const getSessionsStartingBetween = async (startTime, endTime) => {
 
 const getTodaysSessions = () => {
   const startTime = new Date();
-  let endTime = new Date(startTime.getTime() + 60 * 60 * 24 * 1000);
+  let endTime = new Date(startTime.getTime() + 60 * 60 * 20 * 1000);
   return getSessionsStartingBetween(startTime, endTime);
 };
 
