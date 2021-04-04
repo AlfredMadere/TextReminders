@@ -128,37 +128,38 @@ const sendLastReminder = async (params) => {
     });
   }
 };
+
 const textParticipantsInTz = (session, tz) => {
   const type = "morning reminder";
   if (
-    moment.tz(session.tutor.timeZone).utcOffset() == moment.tz(tz).utcOffset()
+    moment.tz(session.tutor.timezone).utcOffset() == moment.tz(tz).utcOffset()
   ) {
     sendText({
       number: session.tutor.number,
-      message: session.tutorReminderText(),
+      message: session.tutorReminderText(true),
       attendeeType: "tutor",
       attendee: session.tutor.name,
       type: type,
     });
   } else {
     console.log(
-      `tutor ${session.tutor.name} not texted for ${session.student.studentName}'s session`
+      `tutor ${session.tutor.name} not texted for ${session.student.studentName}'s session. Recipient timezone: ${session.tutor.timezone} input timezone: ${tz}`
     );
   }
   if (
-    moment.tz(session.student.timeZone).utcOffset() == moment.tz(tz).utcOffset()
+    moment.tz(session.student.timezone).utcOffset() == moment.tz(tz).utcOffset()
   ) {
     session.student.studentNumber &&
       sendText({
         number: session.student.studentNumber,
-        message: session.studentReminderText(),
+        message: session.studentReminderText(true),
         attendeeType: "student",
         attendee: session.student.studentName,
         type: type,
       });
     sendText({
       number: session.student.parentNumber,
-      message: session.studentReminderText(),
+      message: session.studentReminderText(true),
       attendeeType: "parent",
       attendee: session.student.parentName,
       type: type,
@@ -194,7 +195,7 @@ const getSessionsStartingBetween = async (startTime, endTime) => {
 
 const getTodaysSessions = () => {
   const startTime = new Date();
-  let endTime = new Date(startTime.getTime() + 60 * 60 * 24 * 1000);
+  let endTime = new Date(startTime.getTime() + 60 * 60 * 18 * 1000);
   return getSessionsStartingBetween(startTime, endTime);
 };
 

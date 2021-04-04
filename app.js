@@ -20,7 +20,7 @@ import Tutor from "./models/Tutor.js";
 //const Student = require("./models/Student");
 import Student from "./models/Student.js";
 
-let timeZone = "America/Chicago";
+let timeZone = "America/Los_Angeles";
 
 Promise.all([Tutor.populateCache(), Student.populateCache()])
   .then(() => {
@@ -57,7 +57,7 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
     });
 
     const lastReminders = new CronJob(
-      "* * * * *",
+      "*/10 * * * *",
       () => {
         sendLastReminder({ leadTime: 20 });
       },

@@ -30,6 +30,7 @@ const getTwilioClient = async () => {
 
 const sendText = (params) => {
   console.log("sending text:", params);
+
   getTwilioClient()
     .then((twilioClient) => {
       return twilioClient.messages.create({
