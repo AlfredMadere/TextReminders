@@ -1,4 +1,3 @@
-//const getDataFor = require("../drivers/googleSheetsDriver");
 import getDataFor from "../drivers/googleSheetsDriver.js";
 
 class Student {
@@ -17,19 +16,21 @@ Student.cache = {};
 
 Student.populateCache = () => {
   return getDataFor("student")
-    .then((rows) => {
-      if (rows.length) {
+    .then((columns) => {
+      if (columns.length) {
         let newCache = {};
-        rows.forEach((row) => {
-          newCache[row[0]] = new Student({
-            studentName: row[1],
-            studentNumber: row[2],
-            studentEmail: row[3],
-            parentName: row[4],
-            parentNumber: row[5],
-            parentEmail: row[6],
-            timezone: row[7],
-          });
+        columns.forEach((column) => {
+          if (column.length > 0) {
+            newCache[column[0]] = new Student({
+              parentName: column[1],
+              studentName: column[3],
+              studentNumber: column[4],
+              studentEmail: column[5],
+              parentNumber: column[6],
+              parentEmail: column[7],
+              timezone: column[8],
+            });
+          }
         });
         Student.cache = newCache;
       } else {

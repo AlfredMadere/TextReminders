@@ -1,5 +1,6 @@
 import { google } from "googleapis";
-import { downloadCredentialsFromAWS } from "../drivers/awsDriver.js";
+import { downloadFromAWS } from "../drivers/awsDriver.js";
+import { googleSheetsCredentialsKey } from "./populateCredentials.js";
 const { OAuth2 } = google.auth;
 
 const spreadsheets = {
@@ -11,14 +12,19 @@ const spreadsheets = {
     spreadsheetId: "1qG00kP86res-XgfH0fLlube8mWBsHMPS_DDHVAuKarw",
     range: "Sheet1!A3:H",
   },
+  newStudent: {
+    spreadsheetId: "1KLdLm1a9EExiV-LuADff8dnMX4nqIUhRJlToeFbegFk",
+    range: "Students!C7:M12",
+    majorDimension: "COLUMNS",
+  },
 };
-
 let googleSheets = null;
 let googleSheetsCredentials = null;
 
 const getGoogleSheetsCredentials = async () => {
-  googleSheetsCredentials ||= await downloadCredentialsFromAWS(
-    "testSheetCreds"
+  googleSheetsCredentials ||= await downloadFromAWS(
+    googleSheetsCredentialsKey,
+    "apicredentials"
   );
   return googleSheetsCredentials;
 };
@@ -49,16 +55,18 @@ const getDataFor = (modelType) => {
         if (!spreadsheets[modelType]) {
           throw "invalid spreadsheet modeltype " + modelType;
         }
+        console.log(gSheets.spreadsheets.values);
         gSheets.spreadsheets.values.get(spreadsheets[modelType], (err, res) => {
           if (err) {
             reject("The API returned an error: " + err);
           } else {
+            const data = res.data;
             const rows = res.data.values.map((row) => {
               return row.map((cell) => {
                 return cell === "" ? undefined : cell;
               });
             });
-            resolve(rows);
+            resolve(data);
           }
         });
       });
@@ -66,4 +74,4 @@ const getDataFor = (modelType) => {
     .catch((err) => console.log(err));
 };
 
-getDataFor("tutor").then((rows) => console.log("rows", rows));
+export default getDataFor;

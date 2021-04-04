@@ -66,7 +66,9 @@ const sendAndRecordText = (params) => {
         ? params.session.student.parentName
         : "fuck",
     type: params.type,
+    calendar: params.session.calendar,
   });
+  console.log("params.sessionr", params.session);
   sentReminders[params.reminderId] = 1;
 };
 
@@ -111,6 +113,7 @@ const sendLastReminder = async (params) => {
             session: session,
             attendeeType: "student",
             type: type,
+
             reminderId: studentReminderId,
           });
       }
@@ -120,6 +123,7 @@ const sendLastReminder = async (params) => {
             session: session,
             attendeeType: "parent",
             type: type,
+
             reminderId: parentReminderId,
           });
       }
@@ -139,6 +143,7 @@ const textParticipantsInTz = (session, tz) => {
       message: session.tutorReminderText(true),
       attendeeType: "tutor",
       attendee: session.tutor.name,
+      calendar: session.calendar,
       type: type,
     });
   } else {
@@ -155,6 +160,7 @@ const textParticipantsInTz = (session, tz) => {
         message: session.studentReminderText(true),
         attendeeType: "student",
         attendee: session.student.studentName,
+        calendar: session.calendar,
         type: type,
       });
     sendText({
@@ -162,6 +168,7 @@ const textParticipantsInTz = (session, tz) => {
       message: session.studentReminderText(true),
       attendeeType: "parent",
       attendee: session.student.parentName,
+      calendar: session.calendar,
       type: type,
     });
   } else {

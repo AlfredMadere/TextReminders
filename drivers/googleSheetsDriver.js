@@ -4,13 +4,23 @@ import { googleSheetsCredentialsKey } from "../quickTests/populateCredentials.js
 const { OAuth2 } = google.auth;
 
 const spreadsheets = {
-  tutor: {
+  oldTutor: {
     spreadsheetId: "15aejZCoyUjoSl83goXfejzAyAGOMbOHDPzSnVlQ8BJ4",
     range: "Sheet1!A2:E11",
   },
-  student: {
+  oldStudent: {
     spreadsheetId: "1qG00kP86res-XgfH0fLlube8mWBsHMPS_DDHVAuKarw",
     range: "Sheet1!A3:H",
+  },
+  student: {
+    spreadsheetId: "1KLdLm1a9EExiV-LuADff8dnMX4nqIUhRJlToeFbegFk",
+    range: "Students!C4:BL12",
+    majorDimension: "COLUMNS",
+  },
+  tutor: {
+    spreadsheetId: "1KLdLm1a9EExiV-LuADff8dnMX4nqIUhRJlToeFbegFk",
+    range: "Tutors!C4:AU9",
+    majorDimension: "COLUMNS",
   },
 };
 let googleSheets = null;
@@ -54,12 +64,12 @@ const getDataFor = (modelType) => {
           if (err) {
             reject("The API returned an error: " + err);
           } else {
-            const rows = res.data.values.map((row) => {
-              return row.map((cell) => {
+            const columns = res.data.values.map((column) => {
+              return column.map((cell) => {
                 return cell === "" ? undefined : cell;
               });
             });
-            resolve(rows);
+            resolve(columns);
           }
         });
       });

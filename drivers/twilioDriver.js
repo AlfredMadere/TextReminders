@@ -30,7 +30,13 @@ const getTwilioClient = async () => {
 
 const sendText = (params) => {
   console.log("sending text:", params);
-
+  if (params.calendar === "Api tester") {
+    console.log(
+      "not actually gonna send this cuz calendar is",
+      params.calendar
+    );
+  } else {
+    /*
   getTwilioClient()
     .then((twilioClient) => {
       return twilioClient.messages.create({
@@ -40,6 +46,7 @@ const sendText = (params) => {
       });
     })
     .then((message) => console.log(message));
+    */
+  }
 };
-
 export default sendText;

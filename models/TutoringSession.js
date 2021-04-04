@@ -4,6 +4,7 @@ import Student from "../models/Student.js";
 import Tutor from "../models/Tutor.js";
 //const { DateTime } = require("luxon");
 import { DateTime } from "luxon";
+import { googleCalCredentialsKey } from "../quickTests/populateCredentials.js";
 
 class TutoringSession {
   constructor(googleCalEvent) {
@@ -16,6 +17,7 @@ class TutoringSession {
     this.tutor = Tutor.find(matches.groups.tutorName);
     this.startTime = DateTime.fromISO(googleCalEvent.start.dateTime);
     this.id = googleCalEvent.id;
+    this.calendar = googleCalEvent.organizer.displayName;
   }
   tutorReminderText(isMorning) {
     return this.reminderText({

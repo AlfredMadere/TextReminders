@@ -16,22 +16,25 @@ Tutor.find = (name) => {
   return Tutor.cache[name];
 };
 
+
 Tutor.populateCache = () => {
   return getDataFor("tutor")
-    .then((rows) => {
-      if (rows.length) {
+    .then((columns) => {
+      if (columns.length) {
         let newCache = {};
-        rows.forEach((row) => {
-          newCache[row[0]] = new Tutor({
-            name: row[1],
-            number: row[2],
-            email: row[3],
-            timezone: row[4],
-          });
+        columns.forEach((column) => {
+          if (column.length > 0) {
+            newCache[column[0]] = new Tutor({
+              name: column[2],
+              number: column[3],
+              email: column[4],
+              timezone: column[5],
+            });
+          }
         });
         Tutor.cache = newCache;
       } else {
-        throw "no data found";
+        console.log("No data found.");
       }
     })
     .catch((err) => console.log(err));
