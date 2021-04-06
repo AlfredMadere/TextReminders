@@ -10,7 +10,7 @@ class TutoringSession {
   constructor(googleCalEvent) {
     this.summary = googleCalEvent.summary;
     let matches = googleCalEvent.summary.match(
-      /^(?<studentName>\w+)\s+(?<subject>\w+).*\s+(?<tutorName>\w+)$/
+      /^(?<studentName>\w+)\s+(?<subject>\w+).*\s+(?<tutorName>\w+)\s*$/
     );
     this.subject = matches.groups.subject;
     this.student = Student.find(matches.groups.studentName);
@@ -22,14 +22,14 @@ class TutoringSession {
   tutorReminderText(isMorning) {
     return this.reminderText({
       recipientTimezone: this.tutor.timezone,
-      otherParticipant: this.student.studentName,
+      otherParticipant: this.student ? this.student.studentName : null,
       isMorning: isMorning,
     });
   }
   studentReminderText(isMorning) {
     return this.reminderText({
       recipientTimezone: this.student.timezone,
-      otherParticipant: this.tutor.name,
+      otherParticipant: this.tutor ? this.tutor.name : null,
       isMorning: isMorning,
     });
   }
@@ -39,8 +39,16 @@ class TutoringSession {
     let formattedStartTime = rezonedStartTime.toLocaleString(
       DateTime.TIME_SIMPLE
     );
-    let morningMessage = `Morning Reminder of ${this.subject} tutoring later today at ${formattedStartTime} with ${params.otherParticipant}. You may reply STOP at anytime to turn off reminders.`;
-    let lastMessage = `Reminder of upcomming ${this.subject} tutoring session at ${formattedStartTime} with ${params.otherParticipant}. You may reply STOP at anytime to turn off reminders.`;
+    let morningMessage = `Morning Reminder of ${
+      this.subject
+    } tutoring later today at${formattedStartTime} ${
+      params.otherParticipant ? " with " + params.otherParticipant : ""
+    }. You may reply STOP at anytime to turn off reminders.`;
+    let lastMessage = `Reminder of upcomming ${
+      this.subject
+    } tutoring session at${formattedStartTime} ${
+      params.otherParticipant ? " with " + params.otherParticipant : ""
+    }. You may reply STOP at anytime to turn off reminders.`;
     return params.isMorning ? morningMessage : lastMessage;
   }
 }

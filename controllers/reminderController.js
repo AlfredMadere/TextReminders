@@ -1,20 +1,13 @@
-//const googleDriver = require("../drivers/googleCalDriver");
 import googleDriver from "../drivers/googleCalDriver.js";
-//const sendText = require("../drivers/twilioDriver");
 import sendText from "../drivers/twilioDriver.js";
-//const TutoringSession = require("../models/TutoringSession");
 import TutoringSession from "../models/TutoringSession.js";
 import uploadToAWS from "../drivers/awsDriver.js";
 import { downloadFromAWS } from "../drivers/awsDriver.js";
 import { textReminderCacheKey } from "../quickTests/populateCredentials.js";
-//const sentRemindersCache = require("../lookUpTables/sentReminders.json");
-//const fs = require("fs");
-import fs from "fs";
 import moment from "moment-timezone";
 
 let sentReminders = {};
 
-//Need to get cache working
 const updateSentReminderCache = async (sR) => {
   const uploadedTingos = await uploadToAWS(
     JSON.stringify(sR),
@@ -36,42 +29,86 @@ const updateSentRemindersFromCache = async () => {
 
 const sendMorningReminders = async (tz) => {
   const sessionsToday = await getTodaysSessions();
-  sessionsToday.forEach((session) => {
-    textParticipantsInTz(session, tz);
-  });
+  if (sessionsToday.length) {
+    sessionsToday.forEach(async (session) => {
+      textParticipantsInTz(session, tz);
+    });
+  }
   return Promise.resolve(true);
 };
 
 const sendAndRecordText = (params) => {
-  sendText({
-    number:
-      params.attendeeType === "tutor"
-        ? params.session.tutor.number
-        : params.attendeeType === "student"
-        ? params.session.student.studentNumber
-        : params.attendeeType === "parent"
-        ? params.session.student.parentNumber
-        : "fuck",
-    message:
-      params.attendeeType === "tutor"
-        ? params.session.tutorReminderText()
-        : params.session.studentReminderText(),
-    attendeeType: params.attendeeType,
-    attendee:
-      params.attendeeType === "tutor"
-        ? params.session.tutor.name
-        : params.attendeeType === "student"
-        ? params.session.student.studentName
-        : params.attendeeType === "parent"
-        ? params.session.student.parentName
-        : "fuck",
-    type: params.type,
-    calendar: params.session.calendar,
-  });
-  console.log("params.sessionr", params.session);
+  switch (params.attendeeType) {
+    case "tutor":
+      if (params.session.tutor) {
+        sendText({
+          number: params.session.tutor.number,
+          message: params.session.tutorReminderText(),
+          attendeeType: params.attendeeType,
+          attendee: params.session.tutor.name,
+          type: params.type,
+          calendar: params.session.calendar,
+        });
+      } else {
+        sendNoParticipantErrorText({
+          participant: "tutor",
+          session: params.session,
+        });
+      }
+      break;
+    case "student":
+      if (params.session.student) {
+        params.session.student.number &&
+          sendText({
+            number: params.session.student.number,
+            message: params.session.studentReminderText(),
+            attendeeType: params.attendeeType,
+            attendee: params.session.student.studentName,
+            type: params.type,
+            calendar: params.session.calendar,
+          });
+      } else {
+        sendNoParticipantErrorText({
+          participant: "student",
+          session: params.session,
+        });
+      }
+      break;
+    case "parent":
+      if (params.session.student) {
+        params.session.student.parentNumber &&
+          sendText({
+            number: params.session.student.parentNumber,
+            message: params.session.studentReminderText(),
+            attendeeType: params.attendeeType,
+            attendee: params.session.student.parentName,
+            type: params.type,
+            calendar: params.session.calendar,
+          });
+      } else {
+        sendNoParticipantErrorText({
+          participant: "student",
+          session: params.session,
+        });
+      }
+      break;
+    default:
+      console.log(
+        "things are broken because attendee type is ",
+        params.attendeeType
+      );
+  }
   sentReminders[params.reminderId] = 1;
 };
 
+const sendNoParticipantErrorText = (params) => {
+  sendText({
+    number: 5122990497,
+    message: `null ${params.participant} for ${params.session.summary}`,
+    calendar: params.session.calendar,
+    type: "error handling",
+  });
+};
 const sendLastReminder = async (params) => {
   const type = "last reminder";
   const startTime = new Date();
@@ -83,22 +120,27 @@ const sendLastReminder = async (params) => {
   );
   if (upcommingSessions.length) {
     upcommingSessions.forEach(async (session) => {
-      if (!session.student) {
-        console.log("null student", session);
-        throw "null student";
+      let parentReminderId = null;
+      let studentReminderId = null;
+      let tutorReminderId = null;
+      if (session.student) {
+        studentReminderId =
+          session.id + session.student.studentNumber + session.startTime;
+        parentReminderId = `${session.id}${session.student.parentNumber}${session.startTime}`;
+      } else {
+        studentReminderId = session.id + session.startTime + "NULL_STUDENT";
+        parentReminderId = session.id + session.startTime + "NULL_STUDENT";
       }
-      if (!session.tutor) {
-        console.log("null tutor", session);
-        throw "null tutor";
+      if (session.tutor) {
+        tutorReminderId =
+          session.id +
+          session.tutor.number +
+          session.startTime +
+          session.tutor.name;
+      } else {
+        tutorReminderId = session.id + session.startTime + "NULL_TUTOR";
       }
-      const parentReminderId = `${session.id}${session.student.parentNumber}${session.startTime}`;
-      const studentReminderId =
-        session.id + session.student.studentNumber + session.startTime;
-      const tutorReminderId =
-        session.id +
-        session.tutor.number +
-        session.startTime +
-        session.tutor.name;
+
       if (!(tutorReminderId in sentReminders)) {
         sendAndRecordText({
           session: session,
@@ -108,24 +150,20 @@ const sendLastReminder = async (params) => {
         });
       }
       if (!(studentReminderId in sentReminders)) {
-        session.student.studentNumber &&
-          sendAndRecordText({
-            session: session,
-            attendeeType: "student",
-            type: type,
-
-            reminderId: studentReminderId,
-          });
+        sendAndRecordText({
+          session: session,
+          attendeeType: "student",
+          type: type,
+          reminderId: studentReminderId,
+        });
       }
       if (!(parentReminderId in sentReminders)) {
-        session.student.parentNumber &&
-          sendAndRecordText({
-            session: session,
-            attendeeType: "parent",
-            type: type,
-
-            reminderId: parentReminderId,
-          });
+        sendAndRecordText({
+          session: session,
+          attendeeType: "parent",
+          type: type,
+          reminderId: parentReminderId,
+        });
       }
       const updatedReminders = await updateSentReminderCache(sentReminders);
       return updatedReminders;
@@ -135,46 +173,70 @@ const sendLastReminder = async (params) => {
 
 const textParticipantsInTz = (session, tz) => {
   const type = "morning reminder";
-  if (
-    moment.tz(session.tutor.timezone).utcOffset() == moment.tz(tz).utcOffset()
-  ) {
-    sendText({
-      number: session.tutor.number,
-      message: session.tutorReminderText(true),
-      attendeeType: "tutor",
-      attendee: session.tutor.name,
-      calendar: session.calendar,
-      type: type,
-    });
-  } else {
-    console.log(
-      `tutor ${session.tutor.name} not texted for ${session.student.studentName}'s session. Recipient timezone: ${session.tutor.timezone} input timezone: ${tz}`
-    );
-  }
-  if (
-    moment.tz(session.student.timezone).utcOffset() == moment.tz(tz).utcOffset()
-  ) {
-    session.student.studentNumber &&
+  if (session.tutor) {
+    if (
+      moment.tz(session.tutor.timezone).utcOffset() == moment.tz(tz).utcOffset()
+    ) {
       sendText({
-        number: session.student.studentNumber,
-        message: session.studentReminderText(true),
-        attendeeType: "student",
-        attendee: session.student.studentName,
+        number: session.tutor.number,
+        message: session.tutorReminderText(true),
+        attendeeType: "tutor",
+        attendee: session.tutor.name,
         calendar: session.calendar,
         type: type,
       });
-    sendText({
-      number: session.student.parentNumber,
-      message: session.studentReminderText(true),
-      attendeeType: "parent",
-      attendee: session.student.parentName,
-      calendar: session.calendar,
-      type: type,
-    });
+    } else {
+      console.log(
+        `tutor ${session.tutor.name} not texted for ${
+          session.student ? session.student.studentName : "undefined student"
+        }'s session. Recipient timezone: ${
+          session.tutor.timezone
+        } input timezone: ${tz}`
+      );
+    }
   } else {
-    console.log(
-      `student ${session.student.studentName} and parent ${session.student.parentName} not texted for session with ${session.tutor.name}`
-    );
+    sendNoParticipantErrorText({
+      participant: "tutor",
+      session: session,
+    });
+  }
+
+  if (session.student) {
+    if (
+      moment.tz(session.student.timezone).utcOffset() ==
+      moment.tz(tz).utcOffset()
+    ) {
+      session.student.studentNumber &&
+        sendText({
+          number: session.student.studentNumber,
+          message: session.studentReminderText(true),
+          attendeeType: "student",
+          attendee: session.student.studentName,
+          calendar: session.calendar,
+          type: type,
+        });
+      sendText({
+        number: session.student.parentNumber,
+        message: session.studentReminderText(true),
+        attendeeType: "parent",
+        attendee: session.student.parentName,
+        calendar: session.calendar,
+        type: type,
+      });
+    } else {
+      console.log(
+        `student ${session.student.studentName} and parent ${
+          session.student.parentName
+        } not texted for session with ${
+          session.tutor ? session.tutor.name : "undefined tutor"
+        }`
+      );
+    }
+  } else {
+    sendNoParticipantErrorText({
+      participant: "student",
+      session: session,
+    });
   }
 };
 
