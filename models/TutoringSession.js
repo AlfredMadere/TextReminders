@@ -41,12 +41,12 @@ class TutoringSession {
     );
     let morningMessage = `Morning Reminder of ${
       this.subject
-    } tutoring later today at${formattedStartTime} ${
+    } tutoring later today at ${formattedStartTime}${
       params.otherParticipant ? " with " + params.otherParticipant : ""
     }. You may reply STOP at anytime to turn off reminders.`;
     let lastMessage = `Reminder of upcomming ${
       this.subject
-    } tutoring session at${formattedStartTime} ${
+    } tutoring session at ${formattedStartTime}${
       params.otherParticipant ? " with " + params.otherParticipant : ""
     }. You may reply STOP at anytime to turn off reminders.`;
     return params.isMorning ? morningMessage : lastMessage;
