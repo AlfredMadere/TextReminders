@@ -5,16 +5,23 @@ import uploadToAWS from "../drivers/awsDriver.js";
 import { downloadFromAWS } from "../drivers/awsDriver.js";
 import { textReminderCacheKey } from "../quickTests/populateCredentials.js";
 import moment from "moment-timezone";
-
+const REMINDER_CACHE_UPDATE_INTERVAL = 5000;
+let lastCacheContent;
 let sentReminders = {};
 
-const updateSentReminderCache = async (sR) => {
-  const uploadedTingos = await uploadToAWS(
-    JSON.stringify(sR),
-    textReminderCacheKey,
-    "reminderappcache"
-  );
-  return uploadedTingos;
+const updateSentReminderCacheIfStale = async () => {
+  let currentCacheContent = JSON.stringify(sentReminders);
+  if(!(lastCacheContent === currentCacheContent)){
+    console.log("updating aws");
+    const uploadedTingos = await uploadToAWS(
+      currentCacheContent,
+      textReminderCacheKey,
+      "reminderappcache"
+    );
+    lastCacheContent = currentCacheContent;
+    return uploadedTingos;
+  }
+  setTimeout(updateSentReminderCacheIfStale, REMINDER_CACHE_UPDATE_INTERVAL);
 };
 
 const updateSentRemindersFromCache = async () => {
@@ -24,6 +31,8 @@ const updateSentRemindersFromCache = async () => {
     "reminderappcache"
   );
   sentReminders = JSON.parse(sentRemindersString);
+  lastCacheContent = sentRemindersString;
+  console.log("updating sent reminders from cache", sentRemindersString.length);
   return sentReminders;
 };
 
@@ -37,13 +46,13 @@ const sendMorningReminders = async (tz) => {
   return Promise.resolve(true);
 };
 
-const sendAndRecordText = (params) => {
+const sendAndRecordText = async (params) => {
   switch (params.attendeeType) {
     case "tutor":
       if (params.session.tutor) {
         sendText({
           number: params.session.tutor.number,
-          message: params.session.tutorReminderText(),
+          message: params.type === "morning reminder" ? params.session.tutorReminderText(true) : params.session.tutorReminderText(false),
           attendeeType: params.attendeeType,
           attendee: params.session.tutor.name,
           type: params.type,
@@ -58,10 +67,10 @@ const sendAndRecordText = (params) => {
       break;
     case "student":
       if (params.session.student) {
-        params.session.student.number &&
+        params.session.student.studentNumber &&
           sendText({
-            number: params.session.student.number,
-            message: params.session.studentReminderText(),
+            number: params.session.student.studentNumber,
+            message: params.type === "morning reminder" ? params.session.studentReminderText(true) : params.session.studentReminderText(false),
             attendeeType: params.attendeeType,
             attendee: params.session.student.studentName,
             type: params.type,
@@ -79,7 +88,7 @@ const sendAndRecordText = (params) => {
         params.session.student.parentNumber &&
           sendText({
             number: params.session.student.parentNumber,
-            message: params.session.studentReminderText(),
+            message: params.type === "morning reminder" ? params.session.studentReminderText(true) : params.session.studentReminderText(false),
             attendeeType: params.attendeeType,
             attendee: params.session.student.parentName,
             type: params.type,
@@ -126,7 +135,7 @@ const sendLastReminder = async (params) => {
       if (session.student) {
         studentReminderId =
           session.id + session.student.studentNumber + session.startTime;
-        parentReminderId = `${session.id}${session.student.parentNumber}${session.startTime}`;
+          parentReminderId = `${session.id}${session.student.parentNumber}${session.startTime}`;
       } else {
         studentReminderId = session.id + session.startTime + "NULL_STUDENT";
         parentReminderId = session.id + session.startTime + "NULL_STUDENT";
@@ -165,79 +174,98 @@ const sendLastReminder = async (params) => {
           reminderId: parentReminderId,
         });
       }
-      const updatedReminders = await updateSentReminderCache(sentReminders);
-      return updatedReminders;
     });
   }
 };
 
 const textParticipantsInTz = (session, tz) => {
   const type = "morning reminder";
-  if (session.tutor) {
-    if (
-      moment.tz(session.tutor.timezone).utcOffset() == moment.tz(tz).utcOffset()
-    ) {
-      sendText({
-        number: session.tutor.number,
-        message: session.tutorReminderText(true),
-        attendeeType: "tutor",
-        attendee: session.tutor.name,
-        calendar: session.calendar,
-        type: type,
-      });
-    } else {
-      console.log(
-        `tutor ${session.tutor.name} not texted for ${
-          session.student ? session.student.studentName : "undefined student"
-        }'s session. Recipient timezone: ${
-          session.tutor.timezone
-        } input timezone: ${tz}`
-      );
-    }
-  } else {
-    sendNoParticipantErrorText({
-      participant: "tutor",
-      session: session,
-    });
-  }
-
+  let parentReminderId = null;
+  let studentReminderId = null;
+  let tutorReminderId = null;
   if (session.student) {
-    if (
-      moment.tz(session.student.timezone).utcOffset() ==
-      moment.tz(tz).utcOffset()
-    ) {
-      session.student.studentNumber &&
-        sendText({
-          number: session.student.studentNumber,
-          message: session.studentReminderText(true),
-          attendeeType: "student",
-          attendee: session.student.studentName,
-          calendar: session.calendar,
-          type: type,
-        });
-      sendText({
-        number: session.student.parentNumber,
-        message: session.studentReminderText(true),
-        attendeeType: "parent",
-        attendee: session.student.parentName,
-        calendar: session.calendar,
-        type: type,
-      });
-    } else {
-      console.log(
-        `student ${session.student.studentName} and parent ${
-          session.student.parentName
-        } not texted for session with ${
-          session.tutor ? session.tutor.name : "undefined tutor"
-        }`
-      );
-    }
+    studentReminderId =
+      session.id + session.student.studentNumber + session.startTime + type;
+      parentReminderId = `${session.id}${session.student.parentNumber}${session.startTime}${type}`;
+      if (
+        moment.tz(session.student.timezone).utcOffset() == moment.tz(tz).utcOffset()
+      ) {
+        if(!(studentReminderId in sentReminders)){
+          sendAndRecordText({
+            session: session,
+            attendeeType: "student",
+            type: type,
+            reminderId: studentReminderId,
+          });
+        }
+        if(!(parentReminderId in sentReminders)){
+          sendAndRecordText({
+            session: session,
+            attendeeType: "parent",
+            type: type,
+            reminderId: parentReminderId,
+          });
+        }
+      } else {
+        console.log(
+          `tutor ${session.tutor.name} not texted for ${
+            session.student ? session.student.studentName : "undefined student"
+          }'s session. Recipient timezone: ${
+            session.tutor.timezone
+          } input timezone: ${tz}`
+        );
+      }
   } else {
-    sendNoParticipantErrorText({
-      participant: "student",
-      session: session,
-    });
+    studentReminderId = session.id + session.startTime + "NULL_STUDENT";
+    parentReminderId = session.id + session.startTime + "NULL_STUDENT";
+    if(!(studentReminderId in sentReminders)){
+      sendAndRecordText({
+        session: session,
+        attendeeType: "student",
+        type: type,
+        reminderId: studentReminderId
+      });
+    }
   }
+  if (session.tutor) {
+    tutorReminderId =
+      session.id +
+      session.tutor.number +
+      session.startTime +
+      session.tutor.name + type;
+      if (
+        moment.tz(session.tutor.timezone).utcOffset() == moment.tz(tz).utcOffset()
+      ) {
+        if(!(tutorReminderId in sentReminders)){
+          sendAndRecordText({
+            session: session,
+            attendeeType: "tutor",
+            type: type,
+            reminderId: tutorReminderId,
+          });
+        }
+      } else {
+        console.log(
+          `tutor ${session.tutor.name} not texted for ${
+            session.student ? session.student.studentName : "undefined student"
+          }'s session. Recipient timezone: ${
+            session.tutor.timezone
+          } input timezone: ${tz}`
+        );
+      }
+  } else {
+    tutorReminderId = session.id + session.startTime + "NULL_TUTOR";
+    if(!(tutorReminderId in sentReminders)){
+      sendAndRecordText({
+        session: session,
+        attendeeType: "tutor",
+        type: type,
+        reminderId: tutorReminderId
+      });
+    }
+  }
+  
+
 };
 
 const getSessionsStartingBetween = async (startTime, endTime) => {
@@ -269,4 +297,4 @@ const getTodaysSessions = () => {
 };
 
 export default sendMorningReminders;
-export { sendLastReminder, updateSentRemindersFromCache };
+export { sendLastReminder, updateSentRemindersFromCache, updateSentReminderCacheIfStale};

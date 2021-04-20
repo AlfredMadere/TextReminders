@@ -36,15 +36,15 @@ const sendText = (params) => {
       params.calendar
     );
   } else {
-    getTwilioClient()
-      .then((twilioClient) => {
-        return twilioClient.messages.create({
-          to: params.number,
-          from: "+17863479153",
-          body: params.message,
-        });
-      })
-      .then((message) => console.log(message));
+    // getTwilioClient()
+    //   .then((twilioClient) => {
+    //     return twilioClient.messages.create({
+    //       to: params.number,
+    //       from: "+17863479153",
+    //       body: params.message,
+    //     });
+    //   })
+    //   .then((message) => console.log(message));
   }
 };
 export default sendText;
