@@ -45,9 +45,8 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
       );
       morningReminders.start();
     });
-    sendMorningReminders('America/Chicago');
     const lastReminders = new CronJob(
-      "* * * * *",
+      "*/10 * * * *",
       () => {
         sendLastReminder({ leadTime: 20 });
       },

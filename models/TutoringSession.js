@@ -10,8 +10,9 @@ class TutoringSession {
   constructor(googleCalEvent) {
     this.summary = googleCalEvent.summary;
     let matches = googleCalEvent.summary.match(
-      /^(?<studentName>\w+)\s+(?<subject>\w+).*\s+(?<tutorName>\w+)\s*$/
+      /^(?<studentName>\w+)\s+(?<subject>\w+).*\s+with\s+(?<tutorName>\w+)\s*(?:-\s*(?<status>.*\S)\s*)?$/
     );
+    this.status = matches.groups.status;
     this.subject = matches.groups.subject;
     this.student = Student.find(matches.groups.studentName);
     this.tutor = Tutor.find(matches.groups.tutorName);

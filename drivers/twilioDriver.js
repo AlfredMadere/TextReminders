@@ -32,19 +32,28 @@ const sendText = (params) => {
   console.log("sending text:", params);
   if (params.calendar === "Api tester") {
     console.log(
-      "not actually gonna send this cuz calendar is",
+      "only sending texts to alfred because calendar is",
       params.calendar
     );
+    getTwilioClient()
+      .then((twilioClient) => {
+        return twilioClient.messages.create({
+          to: '5122990497',
+          from: "+17863479153",
+          body: params.message,
+        });
+      })
+      .then((message) => console.log(message));
   } else {
-    // getTwilioClient()
-    //   .then((twilioClient) => {
-    //     return twilioClient.messages.create({
-    //       to: params.number,
-    //       from: "+17863479153",
-    //       body: params.message,
-    //     });
-    //   })
-    //   .then((message) => console.log(message));
+    getTwilioClient()
+      .then((twilioClient) => {
+        return twilioClient.messages.create({
+          to: params.number,
+          from: "+17863479153",
+          body: params.message,
+        });
+      })
+      .then((message) => console.log(message));
   }
 };
 export default sendText;
