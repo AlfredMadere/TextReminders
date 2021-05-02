@@ -2,3 +2,4 @@ node_modules
 credentials
 firstTest.pem
 set_env
+client/node_modules
