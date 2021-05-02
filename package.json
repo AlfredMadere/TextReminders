@@ -3,13 +3,14 @@
   "name": "gettutoravailability",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "daemon/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "babel src -d lib",
-    "index": "babel-node --presets env index.js",
     "bare": "node app.js",
-    "app": "bash -c 'source ./set_env ; babel-node --presets env app.js'"
+    "app": "bash -c 'source ./set_env ; babel-node --presets env app.js'",
+    "daemon": "babel-node --presets env daemon/app.js",
+    "server": "babel-node --presets env server/server.js"
   },
   "author": "Alfred Madere",
   "license": "ISC",
