@@ -1,6 +1,6 @@
-import sendText from "./drivers/twilioDriver.js";
-import Tutor from "./models/Tutor.js";
-import Student from "./models/Student.js";
+import sendText from "../drivers/twilioDriver.js";
+import Tutor from "../models/Tutor.js";
+import Student from "../models/Student.js";
 import _ from "lodash";
 
 const textAllTutors = async (message) => {

@@ -1,14 +1,14 @@
-import sendMorningReminders from "./controllers/reminderController.js";
+import sendMorningReminders from "../controllers/reminderController.js";
 import {
   sendLastReminder,
   updateSentRemindersFromCache,
   updateSentReminderCacheIfStale,
-} from "./controllers/reminderController.js";
+} from "../controllers/reminderController.js";
 import cj from "cron";
 const CronJob = cj.CronJob;
-import usTimeZones from "./lookUpTables/usTimeZones.js";
-import Tutor from "./models/Tutor.js";
-import Student from "./models/Student.js";
+import usTimeZones from "../lookUpTables/usTimeZones.js";
+import Tutor from "../models/Tutor.js";
+import Student from "../models/Student.js";
 
 let timeZone = "America/Los_Angeles";
 
