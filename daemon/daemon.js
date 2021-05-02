@@ -46,7 +46,7 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
       morningReminders.start();
     });
     const lastReminders = new CronJob(
-      "*/10 * * * *",
+      "* * * * *",
       () => {
         sendLastReminder({ leadTime: 20 });
       },
@@ -55,4 +55,5 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
       timeZone
     );
     lastReminders.start();
-  }).then(updateSentReminderCacheIfStale);
+  })
+  .then(updateSentReminderCacheIfStale);
