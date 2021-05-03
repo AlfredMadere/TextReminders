@@ -14,12 +14,12 @@ const spreadsheets = {
   },
   student: {
     spreadsheetId: "1KLdLm1a9EExiV-LuADff8dnMX4nqIUhRJlToeFbegFk",
-    range: "Students!C4:BL12",
+    range: "Students!C4:12",
     majorDimension: "COLUMNS",
   },
   tutor: {
     spreadsheetId: "1KLdLm1a9EExiV-LuADff8dnMX4nqIUhRJlToeFbegFk",
-    range: "Tutors!C4:AU9",
+    range: "Tutors!C4:9",
     majorDimension: "COLUMNS",
   },
 };
