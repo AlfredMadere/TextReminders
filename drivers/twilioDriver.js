@@ -31,10 +31,9 @@ const getTwilioClient = async () => {
 const sendText = (params) => {
   if (params.calendar === "Api tester") {
     console.log(
-      "only sending texts to alfred because calendar is",
-      params.calendar
+      `sending text to Alfred in ${process.env.NODE_ENV} mode:`,
+      params
     );
-    console.log("sending text to Alfred:", params);
     getTwilioClient()
       .then((twilioClient) => {
         return twilioClient.messages.create({
@@ -46,15 +45,19 @@ const sendText = (params) => {
       .then((message) => console.log(message));
   } else {
     console.log("sending text:", params);
-    getTwilioClient()
-      .then((twilioClient) => {
-        return twilioClient.messages.create({
-          to: params.number,
-          from: "+17863479153",
-          body: params.message,
-        });
-      })
-      .then((message) => console.log(message));
+    if (process.env.NODE_ENV === "production") {
+      getTwilioClient()
+        .then((twilioClient) => {
+          return twilioClient.messages.create({
+            to: params.number,
+            from: "+17863479153",
+            body: params.message,
+          });
+        })
+        .then((message) => console.log(message));
+    } else if (NODE_ENV === "integration") {
+      console.log("no real texts: integration mode");
+    }
   }
 };
 export default sendText;
