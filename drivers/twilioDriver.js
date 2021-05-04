@@ -49,7 +49,7 @@ const sendText = (params) => {
       getTwilioClient()
         .then((twilioClient) => {
           return twilioClient.messages.create({
-            to: 5122990497,
+            to: params.number,
             from: "+17863479153",
             body: params.message,
           });
