@@ -57,8 +57,8 @@ const sendText = (params) => {
           });
         })
         .then((message) => console.log(message));
-    } else if (NODE_ENV === "integration") {
-      console.log("no real texts: integration mode");
+    } else {
+      console.log(`no real texts: ${process.env.NODE_ENV} mode`);
     }
   }
 };
