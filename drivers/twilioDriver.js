@@ -39,9 +39,7 @@ const sendText = (params) => {
         return twilioClient.messages.create({
           to: "5122990497",
           from: "+17863479153",
-          body:
-            params.message +
-            (process.env.NODE_ENV !== "production" ? process.env.NODE_ENV : ""),
+          body: `${params.message} [${process.env.NODE_ENV}]`,
         });
       })
       .then((message) => console.log(message));
