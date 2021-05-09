@@ -51,7 +51,14 @@ const downloadFromAWS = async (key, bucket) => {
     const jsonCreds = await readS3File({ Key: key, Bucket: bucket });
     return JSON.parse(jsonCreds.Body.toString("utf-8"));
   } catch (e) {
-    throw new Error(`Had an issue uploading Creds to AWS: ${e.message}`);
+    if (e.statusCode === 404) {
+      console.log(
+        `In "downloadFromAWS()": Didn't find specified key ${key}, returned {}`
+      );
+      return JSON.stringify({});
+    } else {
+      throw new Error(`Had an issue dowloading Creds from AWS: ${e.message}`);
+    }
   }
 };
 

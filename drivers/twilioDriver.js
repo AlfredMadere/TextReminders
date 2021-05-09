@@ -39,7 +39,9 @@ const sendText = (params) => {
         return twilioClient.messages.create({
           to: "5122990497",
           from: "+17863479153",
-          body: params.message,
+          body:
+            params.message +
+            (process.env.NODE_ENV !== "production" ? process.env.NODE_ENV : ""),
         });
       })
       .then((message) => console.log(message));
@@ -55,8 +57,8 @@ const sendText = (params) => {
           });
         })
         .then((message) => console.log(message));
-    } else if (NODE_ENV === "integration") {
-      console.log("no real texts: integration mode");
+    } else {
+      console.log(`no real texts: ${process.env.NODE_ENV} mode`);
     }
   }
 };
