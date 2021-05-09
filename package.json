@@ -9,20 +9,19 @@
     "build": "babel src -d lib",
     "index": "babel-node --presets env index.js",
     "bare": "node app.js",
-    "app": "babel-node --presets env app.js",
-    "clickSend": "babel-node --presets env ./drivers/clickSendDriver.js"
+    "app": "bash -c 'source ./set_env ; babel-node --presets env app.js'"
   },
   "author": "Alfred Madere",
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.859.0",
     "babel-cli": "^6.18.0",
-    "clicksend": "^5.0.37",
     "cron": "^1.8.2",
     "googleapis": "^67.1.0",
     "luxon": "^1.25.0",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.33",
+    "nodemon": "^2.0.7",
     "twilio": "^3.56.0",
     "uuid": "^3.4.0"
   },
