@@ -53,5 +53,10 @@ class TutoringSession {
     return params.isMorning ? morningMessage : lastMessage;
   }
 }
+TutoringSession.noTextStatuses = [
+  "pending reschedule",
+  "cancelled",
+  "no reminder",
+];
 
 export default TutoringSession;
