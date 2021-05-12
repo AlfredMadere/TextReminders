@@ -50,74 +50,80 @@ const sendMorningReminders = async (tz) => {
 };
 
 const sendAndRecordText = async (params) => {
-  switch (params.attendeeType) {
-    case "tutor":
-      if (params.session.tutor) {
-        sendText({
-          number: params.session.tutor.number,
-          message:
-            params.type === "morning reminder"
-              ? params.session.tutorReminderText(true)
-              : params.session.tutorReminderText(false),
-          attendeeType: params.attendeeType,
-          attendee: params.session.tutor.name,
-          type: params.type,
-          calendar: params.session.calendar,
-        });
-      } else {
-        sendNoParticipantErrorText({
-          participant: "tutor",
-          session: params.session,
-        });
-      }
-      break;
-    case "student":
-      if (params.session.student) {
-        params.session.student.studentNumber &&
+  if (TutoringSession.noTextStatuses.includes(params.session.status)) {
+    console.log(
+      `Untextable status for ${params.session.summary}: ${params.session.status}`
+    );
+  } else {
+    switch (params.attendeeType) {
+      case "tutor":
+        if (params.session.tutor) {
           sendText({
-            number: params.session.student.studentNumber,
+            number: params.session.tutor.number,
             message:
               params.type === "morning reminder"
-                ? params.session.studentReminderText(true)
-                : params.session.studentReminderText(false),
+                ? params.session.tutorReminderText(true)
+                : params.session.tutorReminderText(false),
             attendeeType: params.attendeeType,
-            attendee: params.session.student.studentName,
+            attendee: params.session.tutor.name,
             type: params.type,
             calendar: params.session.calendar,
           });
-      } else {
-        sendNoParticipantErrorText({
-          participant: "student",
-          session: params.session,
-        });
-      }
-      break;
-    case "parent":
-      if (params.session.student) {
-        params.session.student.parentNumber &&
-          sendText({
-            number: params.session.student.parentNumber,
-            message:
-              params.type === "morning reminder"
-                ? params.session.studentReminderText(true)
-                : params.session.studentReminderText(false),
-            attendeeType: params.attendeeType,
-            attendee: params.session.student.parentName,
-            type: params.type,
-            calendar: params.session.calendar,
+        } else {
+          sendNoParticipantErrorText({
+            participant: "tutor",
+            session: params.session,
           });
-      } else {
-        sendNoParticipantErrorText({
-          participant: "student",
-          session: params.session,
-        });
-      }
-      break;
-    default:
-      console.log(
-        "things are broken because attendee type is ",
-        params.attendeeType
-      );
+        }
+        break;
+      case "student":
+        if (params.session.student) {
+          params.session.student.studentNumber &&
+            sendText({
+              number: params.session.student.studentNumber,
+              message:
+                params.type === "morning reminder"
+                  ? params.session.studentReminderText(true)
+                  : params.session.studentReminderText(false),
+              attendeeType: params.attendeeType,
+              attendee: params.session.student.studentName,
+              type: params.type,
+              calendar: params.session.calendar,
+            });
+        } else {
+          sendNoParticipantErrorText({
+            participant: "student",
+            session: params.session,
+          });
+        }
+        break;
+      case "parent":
+        if (params.session.student) {
+          params.session.student.parentNumber &&
+            sendText({
+              number: params.session.student.parentNumber,
+              message:
+                params.type === "morning reminder"
+                  ? params.session.studentReminderText(true)
+                  : params.session.studentReminderText(false),
+              attendeeType: params.attendeeType,
+              attendee: params.session.student.parentName,
+              type: params.type,
+              calendar: params.session.calendar,
+            });
+        } else {
+          sendNoParticipantErrorText({
+            participant: "student",
+            session: params.session,
+          });
+        }
+        break;
+      default:
+        console.log(
+          "things are broken because attendee type is ",
+          params.attendeeType
+        );
+    }
   }
   sentReminders[params.reminderId] = 1;
 };
@@ -161,7 +167,6 @@ const sendLastReminder = async (params) => {
       } else {
         tutorReminderId = session.id + session.startTime + "NULL_TUTOR";
       }
-
       if (!(tutorReminderId in sentReminders)) {
         sendAndRecordText({
           session: session,
