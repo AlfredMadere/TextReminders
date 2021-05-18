@@ -17,7 +17,7 @@ class SessionLogger extends Component {
     try {
       console.log("john mounted");
       const id = this.props.match.params.id;
-      const res = await fetch(`/logger/?id=${id}`);
+      const res = await fetch(`/api/logger/?id=${id}`);
       if (res.ok) {
         const data = await res.json();
         await this.setState({ sessionData: data, status: data.status });
