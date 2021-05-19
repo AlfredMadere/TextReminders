@@ -2,12 +2,14 @@ import getDataFor from "../drivers/googleSheetsDriver.js";
 
 class Student {
   constructor(params) {
-    this.studentName = params.studentName;
-    this.studentNumber = params.studentNumber;
-    this.studentEmail = params.studentEmail;
-    this.parentName = params.parentName;
-    this.parentNumber = params.parentNumber;
-    this.parentEmail = params.parentEmail;
+    this.name = params.studentName;
+    this.number = params.studentNumber;
+    this.email = params.studentEmail;
+    this.parent = {
+      name: params.parentName,
+      number: params.parentNumber,
+      email: params.parentEmail,
+    };
     this.timezone = params.timezone;
   }
 }

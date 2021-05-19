@@ -77,4 +77,6 @@ const getDataFor = (modelType) => {
     .catch((err) => console.log(err));
 };
 
+
+
 export default getDataFor;
