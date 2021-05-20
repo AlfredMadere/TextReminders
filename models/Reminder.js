@@ -13,16 +13,29 @@ const REMINDER_CACHE_UPDATE_INTERVAL = 5000;
 class Reminder {
   constructor(params) {
     this.recipient = params.recipient;
-    this.message = params.message;
-    this.id = params.id;
+    this.session = params.session
     this.type = params.type;
-    this.calendar = params.calendar;
+    this.id = this.recipient.number + this.recipient.name + this.session.startTime + this.session.id + this.type;
+    this.message = "unset";
   }
-  sendAndRecord() {
+  setMessage () {
+    //set the message
+  }
+  maybeSendAndRecord() {
     //check to make sure the reminder id is not already in the cache
     //call twillio send text function
     //add reminder id to cache
     if (!(this.id in Reminder.sent) && this.recipient.number) {
+      if(this.session.calendar === "Api tester"){
+        console.log(
+          `sending text to Alfred from calendar ${this.session.calendar} in ${process.env.NODE_ENV} mode:`,
+          params
+        );
+        sendText({
+          number: process.env.DEV_PHONE || "5122990497",
+          message: this.message
+        })
+      }
       sendText({
         number: this.recipient.number,
         message: this.message,

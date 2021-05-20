@@ -15,10 +15,12 @@ class TutoringSession {
     this.status = matches.groups.status;
     this.subject = matches.groups.subject;
     this.student = Student.find(matches.groups.studentName);
+    this.parent = Student.find(matches.groups.studentName).parent;
     this.tutor = Tutor.find(matches.groups.tutorName);
     this.startTime = DateTime.fromISO(googleCalEvent.start.dateTime);
     this.id = googleCalEvent.id;
     this.calendar = googleCalEvent.organizer.displayName;
+    this.state = params.state;
   }
   tutorReminderText(isMorning) {
     return this.reminderText({
@@ -59,39 +61,28 @@ class TutoringSession {
     //creates reminder objects for participants in the time zone
     //creates alert objects for any missing participants
     //sends reminders and alerts using thier respective sendAndRecord methods
-
     const morningReminders = [];
     const alerts = [];
-    let studentReminderId;
-    let parentReminderId;
-    let tutorReminderId;
-    if (TutoringSession.noTextStatuses.includes(this.status)) {
-      console.log(`Untextable status for ${this.summary}: ${this.status}`);
+    if (TutoringSession.noActionStatuses.includes(this.status)) {
+      console.log(`No Actuion status for ${this.summary}: ${this.status}`);
     } else {
       if (this.student) {
-        studentReminderId =
-          this.id + this.student.number + this.startTime + "morning";
-        parentReminderId = `${this.id}${this.student.parent.number}${this.startTime}morning`;
         if (
           moment.tz(this.student.timezone).utcOffset() ==
           moment.tz(tz).utcOffset()
         ) {
           morningReminders.push(
             new Reminder({
+              session: this,
               recipient: this.student,
-              message: this.studentReminderText(true),
-              id: studentReminderId,
-              type: "morning",
-              calendar: this.calendar,
+              type: "sessionToday",
             })
           );
           morningReminders.push(
             new Reminder({
+              session: this,
               recipient: this.student.parent,
-              message: this.studentReminderText(true),
-              id: parentReminderId,
-              type: "morning",
-              calendar: this.calendar,
+              type: "sessionToday",
             })
           );
         } else {
@@ -100,31 +91,18 @@ class TutoringSession {
           );
         }
       } else {
-        studentReminderId = this.id + this.startTime + "NULL_STUDENT";
-        parentReminderId = this.id + this.startTime + "NULL_STUDENT";
-        const alertMessage = `null student for ${this.summary}`;
-        alerts.push(
-          new Alert({ message: alertMessage, id: studentReminderId })
-        );
+        alerts.push(new Alert({ type: "missing student", session: this }));
       }
       if (this.tutor) {
-        tutorReminderId =
-          this.id +
-          this.tutor.number +
-          this.startTime +
-          this.tutor.name +
-          "morning";
         if (
           moment.tz(this.tutor.timezone).utcOffset() ==
           moment.tz(tz).utcOffset()
         ) {
           morningReminders.push(
             new Reminder({
+              session: this,
               recipient: this.tutor,
-              message: this.tutorReminderText(true),
-              id: tutorReminderId,
-              type: "morning",
-              calendar: this.calendar,
+              type: "sessionToday",
             })
           );
         } else {
@@ -133,14 +111,10 @@ class TutoringSession {
           );
         }
       } else {
-        tutorReminderId = this.id + this.startTime + "NULL_TUTOR";
-        const alertMessage = `null student for ${this.summary}`;
-        alerts.push(
-          new Alert({ message: alertMessage, id: studentReminderId })
-        );
+        alerts.push(new Alert({ type: "missing tutor", session: this }));
       }
-      morningReminders.forEach((reminder) => reminder.sendAndRecord());
-      alerts.forEach((alert) => alert.sendAndRecord());
+      morningReminders.forEach((reminder) => reminder.maybeSendAndRecord());
+      alerts.forEach((alert) => alert.maybeSendAndRecord());
     }
   }
 }
@@ -173,6 +147,10 @@ TutoringSession.getTodaysSessions = () => {
   return TutoringSession.getSessionsStartingBetween(startTime, endTime);
 };
 
-TutoringSession.noTextStatuses = ["pending reschedule", "cancelled", "meeting"];
+TutoringSession.noActionStatuses = [
+  "pending reschedule",
+  "cancelled",
+  "meeting",
+];
 
 export default TutoringSession;
