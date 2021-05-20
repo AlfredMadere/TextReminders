@@ -3,6 +3,8 @@ import Tutor from "../models/Tutor.js";
 import { DateTime } from "luxon";
 import Reminder from "./Reminder.js";
 import Alert from "./Alert.js";
+import googleCalDriver from "../drivers/googleCalDriver.js";
+import moment from "moment-timezone";
 
 class TutoringSession {
   constructor(googleCalEvent) {
@@ -21,7 +23,7 @@ class TutoringSession {
   tutorReminderText(isMorning) {
     return this.reminderText({
       recipientTimezone: this.tutor.timezone,
-      otherParticipant: this.student ? this.student.studentName : null,
+      otherParticipant: this.student ? this.student.name : null,
       isMorning: isMorning,
     });
   }
@@ -60,13 +62,16 @@ class TutoringSession {
 
     const morningReminders = [];
     const alerts = [];
+    let studentReminderId;
+    let parentReminderId;
+    let tutorReminderId;
     if (TutoringSession.noTextStatuses.includes(this.status)) {
       console.log(`Untextable status for ${this.summary}: ${this.status}`);
     } else {
       if (this.student) {
         studentReminderId =
-          this.id + this.student.studentNumber + this.startTime + type;
-        parentReminderId = `${this.id}${this.student.parentNumber}${this.startTime}${type}`;
+          this.id + this.student.number + this.startTime + "morning";
+        parentReminderId = `${this.id}${this.student.parent.number}${this.startTime}morning`;
         if (
           moment.tz(this.student.timezone).utcOffset() ==
           moment.tz(tz).utcOffset()
@@ -77,6 +82,7 @@ class TutoringSession {
               message: this.studentReminderText(true),
               id: studentReminderId,
               type: "morning",
+              calendar: this.calendar,
             })
           );
           morningReminders.push(
@@ -85,24 +91,29 @@ class TutoringSession {
               message: this.studentReminderText(true),
               id: parentReminderId,
               type: "morning",
+              calendar: this.calendar,
             })
           );
         } else {
           console.log(
-            `student ${this.student.name} not texted for ${this.session.summary}. Recipient timezone: ${this.student.timezone}. Input timezone: ${tz}`
+            `student ${this.student.name} not texted for ${this.summary}. Recipient timezone: ${this.student.timezone}. Input timezone: ${tz}`
           );
         }
       } else {
         studentReminderId = this.id + this.startTime + "NULL_STUDENT";
         parentReminderId = this.id + this.startTime + "NULL_STUDENT";
-        const alertMessage = `null student for ${this.session.summary}`;
+        const alertMessage = `null student for ${this.summary}`;
         alerts.push(
           new Alert({ message: alertMessage, id: studentReminderId })
         );
       }
       if (this.tutor) {
         tutorReminderId =
-          this.id + this.tutor.number + this.startTime + this.tutor.name + type;
+          this.id +
+          this.tutor.number +
+          this.startTime +
+          this.tutor.name +
+          "morning";
         if (
           moment.tz(this.tutor.timezone).utcOffset() ==
           moment.tz(tz).utcOffset()
@@ -113,16 +124,17 @@ class TutoringSession {
               message: this.tutorReminderText(true),
               id: tutorReminderId,
               type: "morning",
+              calendar: this.calendar,
             })
           );
         } else {
           console.log(
-            `tutor ${this.tutor.name} not texted for ${this.session.message}. Recipient timezone: ${this.tutor.timezone}. Input timezone: ${tz}`
+            `tutor ${this.tutor.name} not texted for ${this.summary}. Recipient timezone: ${this.tutor.timezone}. Input timezone: ${tz}`
           );
         }
       } else {
         tutorReminderId = this.id + this.startTime + "NULL_TUTOR";
-        const alertMessage = `null student for ${this.session.summary}`;
+        const alertMessage = `null student for ${this.summary}`;
         alerts.push(
           new Alert({ message: alertMessage, id: studentReminderId })
         );
@@ -134,7 +146,7 @@ class TutoringSession {
 }
 
 TutoringSession.getSessionsStartingBetween = async (startTime, endTime) => {
-  const rawEventList = await googleDriver.getEvents({
+  const rawEventList = await googleCalDriver.getEvents({
     calendarNamePatterns: [
       /^Host one/i,
       /^Host two/i,

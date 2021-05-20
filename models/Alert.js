@@ -5,7 +5,7 @@ class Alert extends Reminder {
         super(params);
     }
     sendAndRecord(){
-
+        
     }
 
 }

@@ -1,20 +1,18 @@
 import sendMorningReminders from "../controllers/reminderController.js";
-import {
-  sendLastReminder,
-  updateSentRemindersFromCache,
-  updateSentReminderCacheIfStale,
-} from "../controllers/reminderController.js";
+import { sendLastReminder } from "../controllers/reminderController.js";
 import cj from "cron";
 const CronJob = cj.CronJob;
 import usTimeZones from "../lookUpTables/usTimeZones.js";
 import Tutor from "../models/Tutor.js";
 import Student from "../models/Student.js";
+import TutoringSession from "../models/TutoringSession.js";
+import Reminder from "../models/Reminder.js";
 
 let timeZone = "America/Los_Angeles";
 
 Promise.all([Tutor.populateCache(), Student.populateCache()])
   .then(() => {
-    return updateSentRemindersFromCache();
+    return Reminder.updateSentRemindersFromCache();
   })
   .then(() => {
     sendLastReminder({ leadTime: 30 });
@@ -32,6 +30,7 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
     attendeeCacheUpdater.start();
 
     sendLastReminder({ leadTime: 20 });
+    sendMorningReminders("America/Chicago");
 
     usTimeZones.forEach((tz) => {
       const morningReminders = new CronJob(
@@ -56,4 +55,4 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
     );
     lastReminders.start();
   })
-  .then(updateSentReminderCacheIfStale);
+  .then(Reminder.updateSentReminderCacheIfStale);

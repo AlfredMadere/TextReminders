@@ -13,21 +13,17 @@ const REMINDER_CACHE_UPDATE_INTERVAL = 5000;
 let lastCacheContent;
 let sentReminders = {};
 
-
-
 //WHAT SHOULD BE IN HERE ---------------------
-const sendMorningReminders = (tz) => {
-  const sessionsToday = await getTodaysSessions();
+const sendMorningReminders = async (tz) => {
+  const sessionsToday = await TutoringSession.getTodaysSessions();
   if (sessionsToday.length) {
     sessionsToday.forEach(async (session) => {
       session.sendMorningRemindersToParticipantsInTz(tz);
     });
   }
   return Promise.resolve(true);
-}
+};
 //--------------------------
-
-
 
 const sendAndRecordText = async (params) => {
   switch (params.attendeeType) {
@@ -170,10 +166,5 @@ const sendLastReminder = async (params) => {
   }
 };
 
-
 export default sendMorningReminders;
-export {
-  sendLastReminder,
-  updateSentRemindersFromCache,
-  updateSentReminderCacheIfStale,
-};
+export { sendLastReminder };
