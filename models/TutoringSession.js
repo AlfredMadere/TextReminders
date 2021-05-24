@@ -21,39 +21,33 @@ class TutoringSession {
     this.id = googleCalEvent.id;
     this.calendar = googleCalEvent.organizer.displayName;
     this.state = params.state;
+    if (!(process.env.NODE_ENV === "production")) {
+      TutoringSession.calendarNamePatterns.push(/^Api tester/i);
+    }
   }
-  tutorReminderText(isMorning) {
-    return this.reminderText({
-      recipientTimezone: this.tutor.timezone,
-      otherParticipant: this.student ? this.student.name : null,
-      isMorning: isMorning,
-    });
-  }
-  studentReminderText(isMorning) {
-    return this.reminderText({
-      recipientTimezone: this.student.timezone,
-      otherParticipant: this.tutor ? this.tutor.name : null,
-      isMorning: isMorning,
-    });
-  }
-
-  reminderText(params) {
-    //returns a string of text to be sent as a reminder depending on timezone and participant
-    let rezonedStartTime = this.startTime.setZone(params.recipientTimezone);
+  sessionReminderText(params) {
+    let participantType = params.participantType;
+    let otherParticipantType =
+      participantType === "student" ? "tutor" : "student";
+    let participant = this[participantType];
+    let otherParticipant = this[otherParticipantType];
+    let rezonedStartTime = this.startTime.setZone(participant.timeZone);
     let formattedStartTime = rezonedStartTime.toLocaleString(
       DateTime.TIME_SIMPLE
     );
-    let morningMessage = `Morning Reminder of ${
-      this.subject
-    } tutoring later today at ${formattedStartTime}${
-      params.otherParticipant ? " with " + params.otherParticipant : ""
-    }. You may reply STOP at anytime to turn off reminders.`;
-    let lastMessage = `Reminder of upcomming ${
-      this.subject
-    } tutoring session at ${formattedStartTime}${
-      params.otherParticipant ? " with " + params.otherParticipant : ""
-    }. You may reply STOP at anytime to turn off reminders.`;
-    return params.isMorning ? morningMessage : lastMessage;
+    if (params.isMorning) {
+      return `Morning Reminder of ${
+        this.subject
+      } tutoring later today at ${formattedStartTime} ${
+        otherParticipant ? "with " + otherParticipant.name : ""
+      }. You may reply STOP at anytime to turn off reminders.`;
+    } else {
+      return `Reminder of upcomming ${
+        this.subject
+      } tutoring session at ${formattedStartTime}${
+        otherParticipant ? " with " + otherParticipant.name : ""
+      }. You may reply STOP at anytime to turn off reminders.`;
+    }
   }
 
   sendMorningRemindersToParticipantsInTz(tz) {
@@ -76,6 +70,11 @@ class TutoringSession {
               session: this,
               recipient: this.student,
               type: "sessionToday",
+              recipientRole: "student",
+              message: this.sessionReminderText({
+                isMorning: true,
+                participantType: "student",
+              }),
             })
           );
           morningReminders.push(
@@ -83,6 +82,11 @@ class TutoringSession {
               session: this,
               recipient: this.student.parent,
               type: "sessionToday",
+              recipientRole: "parent",
+              message: this.sessionReminderText({
+                isMorning: true,
+                participantType: "student",
+              }),
             })
           );
         } else {
@@ -103,6 +107,11 @@ class TutoringSession {
               session: this,
               recipient: this.tutor,
               type: "sessionToday",
+              recipientRole: "tutor",
+              message: this.sessionReminderText({
+                isMorning: true,
+                participantType: "tutor",
+              }),
             })
           );
         } else {
@@ -121,13 +130,7 @@ class TutoringSession {
 
 TutoringSession.getSessionsStartingBetween = async (startTime, endTime) => {
   const rawEventList = await googleCalDriver.getEvents({
-    calendarNamePatterns: [
-      /^Host one/i,
-      /^Host two/i,
-      /^Host three/i,
-      /^Ivy Advantage Corporate/i,
-      /^Api tester/i,
-    ],
+    calendarNamePatterns: TutoringSession.calendarNamePatterns,
     startTime: startTime,
     endTime: endTime,
   });
@@ -151,6 +154,13 @@ TutoringSession.noActionStatuses = [
   "pending reschedule",
   "cancelled",
   "meeting",
+];
+
+TutoringSession.calendarNamePatterns = [
+  /^Host one/i,
+  /^Host two/i,
+  /^Host three/i,
+  /^Ivy Advantage Corporate/i,
 ];
 
 export default TutoringSession;
