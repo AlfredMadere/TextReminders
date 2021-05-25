@@ -4,7 +4,8 @@ import TutoringSession from "../models/TutoringSession.js";
 import uploadToAWS from "../drivers/awsDriver.js";
 import { downloadFromAWS } from "../drivers/awsDriver.js";
 import moment from "moment-timezone";
-import { ThisMonthList } from "twilio/lib/rest/api/v2010/account/usage/record/thisMonth";
+
+
 const textReminderCacheKey =
   process.env.NODE_ENV === "production"
     ? "textReminderCache"
@@ -22,7 +23,7 @@ class Reminder {
       this.session.startTime +
       this.session.id +
       this.type;
-    this.message = "unset";
+    this.message = params.message;
     this.recipientRole = params.recipientRole;
     if(!(process.env.NODE_ENV === "production")){
       this.message = `${this.message} [${process.env.NODE_ENV}]`;

@@ -29,7 +29,7 @@ const getTwilioClient = async () => {
 };
 
 const sendText = (params) => {
-  if (process.env.TWILIO_ACTIVE) {
+  if (process.env.TWILIO_ACTIVE === 'true') {
     getTwilioClient()
       .then((twilioClient) => {
         return twilioClient.messages.create({

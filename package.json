@@ -15,11 +15,13 @@
   "dependencies": {
     "aws-sdk": "^2.859.0",
     "babel-cli": "^6.18.0",
+    "babel-preset-react": "^6.24.1",
     "clicksend": "^5.0.37",
     "cookie-parser": "~1.4.4",
     "cron": "^1.8.2",
     "debug": "~2.6.9",
     "express": "~4.16.1",
+    "express-generator": "^4.16.1",
     "googleapis": "^67.1.0",
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",

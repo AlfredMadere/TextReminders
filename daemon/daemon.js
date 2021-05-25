@@ -1,5 +1,4 @@
-import sendMorningReminders from "../controllers/reminderController.js";
-import { sendLastReminder } from "../controllers/reminderController.js";
+
 import cj from "cron";
 const CronJob = cj.CronJob;
 import usTimeZones from "../lookUpTables/usTimeZones.js";
@@ -11,9 +10,9 @@ import Reminder from "../models/Reminder.js";
 
 const INTERVAL = {
   day: 60*18,
-  leadTime: 20
+  leadTime: 60
 }
-
+const timeZone = "America/Chicago";
 
 Promise.all([Tutor.populateCache(), Student.populateCache()])
   .then(() => {
@@ -31,8 +30,8 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
       },
       null,
       true,
-      "America/Chicago"
-    );
+      timeZone
+      );
     attendeeCacheUpdater.start();
 
 

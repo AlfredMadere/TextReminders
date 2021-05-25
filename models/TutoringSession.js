@@ -5,7 +5,7 @@ import Reminder from "./Reminder.js";
 import Alert from "./Alert.js";
 import googleCalDriver from "../drivers/googleCalDriver.js";
 import moment from "moment-timezone";
-const 
+
 
 class TutoringSession {
   constructor(googleCalEvent) {
@@ -16,12 +16,14 @@ class TutoringSession {
     this.status = matches.groups.status;
     this.subject = matches.groups.subject;
     this.student = Student.find(matches.groups.studentName);
-    this.parent = Student.find(matches.groups.studentName).parent;
+    this.parent = this.student ?  Student.find(matches.groups.studentName).parent : null;
+    
+   
     this.tutor = Tutor.find(matches.groups.tutorName);
     this.startTime = DateTime.fromISO(googleCalEvent.start.dateTime);
     this.id = googleCalEvent.id;
     this.calendar = googleCalEvent.organizer.displayName;
-    this.state = params.state;
+   // this.state = googleCalEvent.state;
     if (!(process.env.NODE_ENV === "production")) {
       TutoringSession.calendarNamePatterns.push(/^Api tester/i);
     }
@@ -62,6 +64,9 @@ class TutoringSession {
     //creates reminder objects for participants in the time zone
     //creates alert objects for any missing participants
     //sends reminders and alerts using thier respective sendAndRecord methods
+
+
+
     const reminders = [];
     const alerts = [];
     if (TutoringSession.noActionStatuses.includes(this.status)) {
@@ -145,8 +150,12 @@ class TutoringSession {
           })
         );
       }
+
+     
+
       reminders.forEach((reminder) => reminder.maybeSendAndRecord());
       alerts.forEach((alert) => alert.maybeSendAndRecord());
+
     }
   }
 }
@@ -171,18 +180,23 @@ TutoringSession.getSessionsStartingBetween = async (startTime, endTime) => {
 TutoringSession.getSessions = (interval) => {
   const startTime = new Date();
   const endTime = new Date(startTime.getTime() + 60*1000*interval);
+  console.log(startTime.toLocaleString(DateTime.DATETIME_SHORT),endTime.toLocaleString(DateTime.DATETIME_SHORT));
   return TutoringSession.getSessionsStartingBetween(startTime, endTime);
   
 };
 
 
-// WARN: generic name not specific enough might change late with more session loggin capability 
-TutoringSession.queueReminders = (params) => {
+// WARN: generic name not specific enough might change late with more session loggin capability \\\
+
+
+TutoringSession.queueReminders = async (params) => {
 
   const sessionList = await TutoringSession.getSessions(params.withinPeriod);
+  console.log(sessionList.length);
+
   if (sessionList.length) {
     sessionList.forEach(async (session) => {
-      session.sendRemindersToParticipants({ reminderType: params.reminderType, tz: params.timeZone });
+      session.sendRemindersToParticipants({ type: params.reminderType, tz: params.timeZone });
     });
   }
   
@@ -208,6 +222,7 @@ TutoringSession.calendarNamePatterns = [
   /^Host two/i,
   /^Host three/i,
   /^Ivy Advantage Corporate/i,
+  /^Api tester/i,
 ];
 
 export default TutoringSession;
