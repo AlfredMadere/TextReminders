@@ -5,6 +5,7 @@ import Reminder from "./Reminder.js";
 import Alert from "./Alert.js";
 import googleCalDriver from "../drivers/googleCalDriver.js";
 import moment from "moment-timezone";
+const 
 
 class TutoringSession {
   constructor(googleCalEvent) {
@@ -35,7 +36,7 @@ class TutoringSession {
     let formattedStartTime = rezonedStartTime.toLocaleString(
       DateTime.TIME_SIMPLE
     );
-    if (params.isMorning) {
+    if (params.type === "sessionToday") {
       return `Morning Reminder of ${
         this.subject
       } tutoring later today at ${formattedStartTime} ${
@@ -49,42 +50,48 @@ class TutoringSession {
       }. You may reply STOP at anytime to turn off reminders.`;
     }
   }
-
-  sendMorningRemindersToParticipantsInTz(tz) {
+  missingParticipantAlertMessage(params) {
+    let alertMessage = `Null ${params.participant} for session: ${
+      this.summary
+    } at ${this.startTime.toLocaleString(DateTime.DATETIME_SHORT)}`;
+    return alertMessage;
+  }
+  
+  sendRemindersToParticipants(params) {
     //checks to make sure the session status doesn't prevent sending reminder
     //creates reminder objects for participants in the time zone
     //creates alert objects for any missing participants
     //sends reminders and alerts using thier respective sendAndRecord methods
-    const morningReminders = [];
+    const reminders = [];
     const alerts = [];
     if (TutoringSession.noActionStatuses.includes(this.status)) {
-      console.log(`No Actuion status for ${this.summary}: ${this.status}`);
+      console.log(`No Action status for ${this.summary}: ${this.status}`);
     } else {
       if (this.student) {
-        if (
-          moment.tz(this.student.timezone).utcOffset() ==
-          moment.tz(tz).utcOffset()
+        if ((!params.tz) ||
+          (moment.tz(this.student.timezone).utcOffset() ==
+          moment.tz(params.tz).utcOffset())
         ) {
-          morningReminders.push(
+          reminders.push(
             new Reminder({
               session: this,
               recipient: this.student,
-              type: "sessionToday",
+              type: params.type,
               recipientRole: "student",
               message: this.sessionReminderText({
-                isMorning: true,
+                type: params.type,
                 participantType: "student",
               }),
             })
           );
-          morningReminders.push(
+          reminders.push(
             new Reminder({
               session: this,
               recipient: this.student.parent,
-              type: "sessionToday",
+              type: params.type,
               recipientRole: "parent",
               message: this.sessionReminderText({
-                isMorning: true,
+                type: params.type,
                 participantType: "student",
               }),
             })
@@ -95,21 +102,29 @@ class TutoringSession {
           );
         }
       } else {
-        alerts.push(new Alert({ type: "missing student", session: this }));
+        alerts.push(
+          new Alert({
+            type: "nullStudent",
+            session: this,
+            message: this.missingParticipantAlertMessage({
+              participant: "student",
+            }),
+          })
+        );
       }
       if (this.tutor) {
-        if (
-          moment.tz(this.tutor.timezone).utcOffset() ==
-          moment.tz(tz).utcOffset()
+        if ((!params.tz) ||
+          (moment.tz(this.tutor.timezone).utcOffset() ==
+          moment.tz(params.tz).utcOffset())
         ) {
-          morningReminders.push(
+          reminders.push(
             new Reminder({
               session: this,
               recipient: this.tutor,
-              type: "sessionToday",
+              type: params.type,
               recipientRole: "tutor",
               message: this.sessionReminderText({
-                isMorning: true,
+                type: params.type,
                 participantType: "tutor",
               }),
             })
@@ -120,9 +135,17 @@ class TutoringSession {
           );
         }
       } else {
-        alerts.push(new Alert({ type: "missing tutor", session: this }));
+        alerts.push(
+          new Alert({
+            type: "nullTutor",
+            session: this,
+            message: this.missingParticipantAlertMessage({
+              participant: "tutor",
+            }),
+          })
+        );
       }
-      morningReminders.forEach((reminder) => reminder.maybeSendAndRecord());
+      reminders.forEach((reminder) => reminder.maybeSendAndRecord());
       alerts.forEach((alert) => alert.maybeSendAndRecord());
     }
   }

@@ -29,38 +29,16 @@ const getTwilioClient = async () => {
 };
 
 const sendText = (params) => {
-  if (params.calendar === "Api tester") {
-    console.log(
-      `sending text to Alfred from calendar ${params.calendar} in ${process.env.NODE_ENV} mode:`,
-      params
-    );
+  if (process.env.TWILIO_ACTIVE) {
     getTwilioClient()
       .then((twilioClient) => {
         return twilioClient.messages.create({
-          to: "5122990497",
+          to: params.number,
           from: "+17863479153",
-          body:
-            params.message +
-            (process.env.NODE_ENV !== "production" ? process.env.NODE_ENV : ""),
+          body: params.message,
         });
       })
-      .then((message) => console.log(message));
-  } else {
-    if (process.env.NODE_ENV === "production") {
-      console.log("sending text:", params);
-      getTwilioClient()
-        .then((twilioClient) => {
-          return twilioClient.messages.create({
-            to: params.number,
-            from: "+17863479153",
-            body: params.message,
-          });
-        })
-        .then((message) => console.log(message));
-    } else {
-      console.log(`not sending text: ${process.env.NODE_ENV} mode`);
-      console.log("text:", params);
-    }
+      .catch((err) => console.log(err));
   }
 };
 export default sendText;
