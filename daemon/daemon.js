@@ -8,14 +8,20 @@ import Student from "../models/Student.js";
 import TutoringSession from "../models/TutoringSession.js";
 import Reminder from "../models/Reminder.js";
 
-let timeZone = "America/Los_Angeles";
+
+const INTERVAL = {
+  day: 60*18,
+  leadTime: 20
+}
+
 
 Promise.all([Tutor.populateCache(), Student.populateCache()])
   .then(() => {
     return Reminder.updateSentRemindersFromCache();
   })
   .then(() => {
-    sendLastReminder({ leadTime: 30 });
+    TutoringSession.queueReminders({ withinPeriod: INTERVAL.leadTime,
+    reminderType: 'lastCall'});
 
     const attendeeCacheUpdater = new CronJob(
       "0 1 * * *",
@@ -25,34 +31,38 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
       },
       null,
       true,
-      timeZone
+      "America/Chicago"
     );
     attendeeCacheUpdater.start();
 
-    sendLastReminder({ leadTime: 20 });
-    sendMorningReminders("America/Chicago");
+
 
     usTimeZones.forEach((tz) => {
-      const morningReminders = new CronJob(
+      const sessionTodayRemindersProcess = new CronJob(
         "0 9 * * *",
         () => {
-          sendMorningReminders(tz);
+          TutoringSession.queueReminders({
+            reminderType: 'sessionToday',
+             timeZone: tz,
+             withinPeriod: INTERVAL.day });
         },
         null,
         true,
         tz
       );
-      morningReminders.start();
+      sessionTodayRemindersProcess.start();
     });
-    const lastReminders = new CronJob(
+    const lastCallRemindersProcess = new CronJob(
       "* * * * *",
       () => {
-        sendLastReminder({ leadTime: 20 });
+        TutoringSession.queueReminders({
+          reminderType: 'lastCall', 
+          withinPeriod: INTERVAL.leadTime});
       },
       null,
       true,
       timeZone
     );
-    lastReminders.start();
+    lastCallRemindersProcess.start();
   })
   .then(Reminder.updateSentReminderCacheIfStale);

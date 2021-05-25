@@ -68,7 +68,7 @@ class TutoringSession {
       console.log(`No Action status for ${this.summary}: ${this.status}`);
     } else {
       if (this.student) {
-        if ((!params.tz) ||
+        if ((  !(params.reminderType === 'sessionToday')   ) ||
           (moment.tz(this.student.timezone).utcOffset() ==
           moment.tz(params.tz).utcOffset())
         ) {
@@ -113,7 +113,7 @@ class TutoringSession {
         );
       }
       if (this.tutor) {
-        if ((!params.tz) ||
+        if ((   !(params.reminderType === 'sessionToday')      ) ||
           (moment.tz(this.tutor.timezone).utcOffset() ==
           moment.tz(params.tz).utcOffset())
         ) {
@@ -167,11 +167,35 @@ TutoringSession.getSessionsStartingBetween = async (startTime, endTime) => {
   return Promise.resolve(sessionsBetween);
 };
 
+// WARN: generic name not specific enough might change late with more session loggin capability
+TutoringSession.getSessions = (interval) => {
+  const startTime = new Date();
+  const endTime = new Date(startTime.getTime() + 60*1000*interval);
+  return TutoringSession.getSessionsStartingBetween(startTime, endTime);
+  
+};
+
+
+// WARN: generic name not specific enough might change late with more session loggin capability 
+TutoringSession.queueReminders = (params) => {
+
+  const sessionList = await TutoringSession.getSessions(params.withinPeriod);
+  if (sessionList.length) {
+    sessionList.forEach(async (session) => {
+      session.sendRemindersToParticipants({ reminderType: params.reminderType, tz: params.timeZone });
+    });
+  }
+  
+}
+/* dep
 TutoringSession.getTodaysSessions = () => {
   const startTime = new Date();
   let endTime = new Date(startTime.getTime() + 60 * 60 * 18 * 1000);
   return TutoringSession.getSessionsStartingBetween(startTime, endTime);
 };
+*/
+
+
 
 TutoringSession.noActionStatuses = [
   "pending reschedule",
