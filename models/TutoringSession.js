@@ -2,10 +2,9 @@ import Student from "../models/Student.js";
 import Tutor from "../models/Tutor.js";
 import { DateTime } from "luxon";
 import Reminder from "./Reminder.js";
-import Alert from "./Alert.js";
+import Alert from "./SessionAlert.js";
 import googleCalDriver from "../drivers/googleCalDriver.js";
 import moment from "moment-timezone";
-
 
 class TutoringSession {
   constructor(googleCalEvent) {
@@ -16,14 +15,15 @@ class TutoringSession {
     this.status = matches.groups.status;
     this.subject = matches.groups.subject;
     this.student = Student.find(matches.groups.studentName);
-    this.parent = this.student ?  Student.find(matches.groups.studentName).parent : null;
-    
-   
+    this.parent = this.student
+      ? Student.find(matches.groups.studentName).parent
+      : null;
+
     this.tutor = Tutor.find(matches.groups.tutorName);
     this.startTime = DateTime.fromISO(googleCalEvent.start.dateTime);
     this.id = googleCalEvent.id;
     this.calendar = googleCalEvent.organizer.displayName;
-   // this.state = googleCalEvent.state;
+    // this.state = googleCalEvent.state;
     if (!(process.env.NODE_ENV === "production")) {
       TutoringSession.calendarNamePatterns.push(/^Api tester/i);
     }
@@ -58,14 +58,12 @@ class TutoringSession {
     } at ${this.startTime.toLocaleString(DateTime.DATETIME_SHORT)}`;
     return alertMessage;
   }
-  
+
   sendRemindersToParticipants(params) {
     //checks to make sure the session status doesn't prevent sending reminder
     //creates reminder objects for participants in the time zone
     //creates alert objects for any missing participants
     //sends reminders and alerts using thier respective sendAndRecord methods
-
-
 
     const reminders = [];
     const alerts = [];
@@ -73,9 +71,10 @@ class TutoringSession {
       console.log(`No Action status for ${this.summary}: ${this.status}`);
     } else {
       if (this.student) {
-        if ((  !(params.reminderType === 'sessionToday')   ) ||
-          (moment.tz(this.student.timezone).utcOffset() ==
-          moment.tz(params.tz).utcOffset())
+        if (
+          !(params.reminderType === "sessionToday") ||
+          moment.tz(this.student.timezone).utcOffset() ==
+            moment.tz(params.tz).utcOffset()
         ) {
           reminders.push(
             new Reminder({
@@ -118,9 +117,10 @@ class TutoringSession {
         );
       }
       if (this.tutor) {
-        if ((   !(params.reminderType === 'sessionToday')      ) ||
-          (moment.tz(this.tutor.timezone).utcOffset() ==
-          moment.tz(params.tz).utcOffset())
+        if (
+          !(params.reminderType === "sessionToday") ||
+          moment.tz(this.tutor.timezone).utcOffset() ==
+            moment.tz(params.tz).utcOffset()
         ) {
           reminders.push(
             new Reminder({
@@ -151,11 +151,8 @@ class TutoringSession {
         );
       }
 
-     
-
       reminders.forEach((reminder) => reminder.maybeSendAndRecord());
       alerts.forEach((alert) => alert.maybeSendAndRecord());
-
     }
   }
 }
@@ -179,28 +176,29 @@ TutoringSession.getSessionsStartingBetween = async (startTime, endTime) => {
 // WARN: generic name not specific enough might change late with more session loggin capability
 TutoringSession.getSessions = (interval) => {
   const startTime = new Date();
-  const endTime = new Date(startTime.getTime() + 60*1000*interval);
-  console.log(startTime.toLocaleString(DateTime.DATETIME_SHORT),endTime.toLocaleString(DateTime.DATETIME_SHORT));
+  const endTime = new Date(startTime.getTime() + 60 * 1000 * interval);
+  console.log(
+    startTime.toLocaleString(DateTime.DATETIME_SHORT),
+    endTime.toLocaleString(DateTime.DATETIME_SHORT)
+  );
   return TutoringSession.getSessionsStartingBetween(startTime, endTime);
-  
 };
-
 
 // WARN: generic name not specific enough might change late with more session loggin capability \\\
 
-
 TutoringSession.queueReminders = async (params) => {
-
   const sessionList = await TutoringSession.getSessions(params.withinPeriod);
   console.log(sessionList.length);
 
   if (sessionList.length) {
     sessionList.forEach(async (session) => {
-      session.sendRemindersToParticipants({ type: params.reminderType, tz: params.timeZone });
+      session.sendRemindersToParticipants({
+        type: params.reminderType,
+        tz: params.timeZone,
+      });
     });
   }
-  
-}
+};
 /* dep
 TutoringSession.getTodaysSessions = () => {
   const startTime = new Date();
@@ -208,8 +206,6 @@ TutoringSession.getTodaysSessions = () => {
   return TutoringSession.getSessionsStartingBetween(startTime, endTime);
 };
 */
-
-
 
 TutoringSession.noActionStatuses = [
   "pending reschedule",

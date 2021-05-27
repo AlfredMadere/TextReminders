@@ -1,12 +1,13 @@
 import Reminder from "./Reminder.js";
+import sendText from "../drivers/twilioDriver.js";
 
-class Alert extends Reminder {
+class SessionAlert {
   constructor(params) {
-    super(params);
-    this.message = `ALERT: ${this.message}`
+    this.message = `SESSION ALERT: ${params.message}`;
+    this.id = params.session.summary + params.session.startTime + params.type;
   }
   maybeSendAndRecord() {
-    if (!(this.id in Super.sent)) {
+    if (!(this.id in Reminder.sent)) {
       this.sendAndPrintAlert();
       Reminder.sent[this.id] = 1;
     }
@@ -23,4 +24,4 @@ class Alert extends Reminder {
   }
 }
 
-export default Alert;
+export default SessionAlert;
