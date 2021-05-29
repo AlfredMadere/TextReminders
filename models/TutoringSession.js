@@ -24,9 +24,6 @@ class TutoringSession {
     this.id = googleCalEvent.id;
     this.calendar = googleCalEvent.organizer.displayName;
     // this.state = googleCalEvent.state;
-    if (!(process.env.NODE_ENV === "production")) {
-      TutoringSession.calendarNamePatterns.push(/^Api tester/i);
-    }
   }
   sessionReminderText(params) {
     let participantType = params.participantType;
@@ -34,7 +31,7 @@ class TutoringSession {
       participantType === "student" ? "tutor" : "student";
     let participant = this[participantType];
     let otherParticipant = this[otherParticipantType];
-    let rezonedStartTime = this.startTime.setZone(participant.timeZone);
+    let rezonedStartTime = this.startTime.setZone(participant.timezone);
     let formattedStartTime = rezonedStartTime.toLocaleString(
       DateTime.TIME_SIMPLE
     );
@@ -43,13 +40,13 @@ class TutoringSession {
         this.subject
       } tutoring later today at ${formattedStartTime} ${
         otherParticipant ? "with " + otherParticipant.name : ""
-      }. You may reply STOP at anytime to turn off reminders.`;
+      }.`;
     } else {
       return `Reminder of upcomming ${
         this.subject
       } tutoring session at ${formattedStartTime}${
         otherParticipant ? " with " + otherParticipant.name : ""
-      }. You may reply STOP at anytime to turn off reminders.`;
+      }.`;
     }
   }
   missingParticipantAlertMessage(params) {
@@ -72,7 +69,7 @@ class TutoringSession {
     } else {
       if (this.student) {
         if (
-          !(params.reminderType === "sessionToday") ||
+          !params.tz ||
           moment.tz(this.student.timezone).utcOffset() ==
             moment.tz(params.tz).utcOffset()
         ) {
@@ -102,7 +99,7 @@ class TutoringSession {
           );
         } else {
           console.log(
-            `student ${this.student.name} not texted for ${this.summary}. Recipient timezone: ${this.student.timezone}. Input timezone: ${tz}`
+            `student ${this.student.name} not texted for ${this.summary}. Recipient timezone: ${this.student.timezone}. Input timezone: ${params.tz}`
           );
         }
       } else {
@@ -118,7 +115,7 @@ class TutoringSession {
       }
       if (this.tutor) {
         if (
-          !(params.reminderType === "sessionToday") ||
+          !params.tz ||
           moment.tz(this.tutor.timezone).utcOffset() ==
             moment.tz(params.tz).utcOffset()
         ) {
@@ -136,7 +133,7 @@ class TutoringSession {
           );
         } else {
           console.log(
-            `tutor ${this.tutor.name} not texted for ${this.summary}. Recipient timezone: ${this.tutor.timezone}. Input timezone: ${tz}`
+            `tutor ${this.tutor.name} not texted for ${this.summary}. Recipient timezone: ${this.tutor.timezone}. Input timezone: ${params.tz}`
           );
         }
       } else {
@@ -177,10 +174,6 @@ TutoringSession.getSessionsStartingBetween = async (startTime, endTime) => {
 TutoringSession.getSessions = (interval) => {
   const startTime = new Date();
   const endTime = new Date(startTime.getTime() + 60 * 1000 * interval);
-  console.log(
-    startTime.toLocaleString(DateTime.DATETIME_SHORT),
-    endTime.toLocaleString(DateTime.DATETIME_SHORT)
-  );
   return TutoringSession.getSessionsStartingBetween(startTime, endTime);
 };
 
@@ -188,8 +181,6 @@ TutoringSession.getSessions = (interval) => {
 
 TutoringSession.queueReminders = async (params) => {
   const sessionList = await TutoringSession.getSessions(params.withinPeriod);
-  console.log(sessionList.length);
-
   if (sessionList.length) {
     sessionList.forEach(async (session) => {
       session.sendRemindersToParticipants({
@@ -199,7 +190,7 @@ TutoringSession.queueReminders = async (params) => {
     });
   }
 };
-/* dep
+/* DEPRICATED
 TutoringSession.getTodaysSessions = () => {
   const startTime = new Date();
   let endTime = new Date(startTime.getTime() + 60 * 60 * 18 * 1000);
@@ -218,7 +209,10 @@ TutoringSession.calendarNamePatterns = [
   /^Host two/i,
   /^Host three/i,
   /^Ivy Advantage Corporate/i,
-  /^Api tester/i,
 ];
+
+if (!(process.env.NODE_ENV === "production")) {
+  TutoringSession.calendarNamePatterns.push(/^Api tester/i);
+}
 
 export default TutoringSession;
