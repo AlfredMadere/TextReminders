@@ -51,7 +51,7 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
       sessionTodayRemindersProcess.start();
     });
     const lastCallRemindersProcess = new CronJob(
-      "* * * * *",
+      "*/10 * * * *",
       () => {
         TutoringSession.queueReminders({
           reminderType: "lastCall",

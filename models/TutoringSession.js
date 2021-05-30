@@ -50,9 +50,10 @@ class TutoringSession {
     }
   }
   missingParticipantAlertMessage(params) {
+    let rezonedStartTime = this.startTime.setZone(process.env.DEV_TIME_ZONE);
     let alertMessage = `Null ${params.participant} for session: ${
       this.summary
-    } at ${this.startTime.toLocaleString(DateTime.DATETIME_SHORT)}`;
+    } at ${rezonedStartTime.toLocaleString(DateTime.DATETIME_SHORT)}`;
     return alertMessage;
   }
 
