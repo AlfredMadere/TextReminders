@@ -8,7 +8,7 @@ import Reminder from "../models/Reminder.js";
 
 const INTERVAL = {
   day: 60 * 18,
-  leadTime: 60,
+  leadTime: process.env.REMINDER_LEAD_TIME || 30,
 };
 const timeZone = "America/Chicago";
 
