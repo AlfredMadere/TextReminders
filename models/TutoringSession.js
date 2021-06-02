@@ -9,7 +9,7 @@ import moment from "moment-timezone";
 class TutoringSession {
   constructor(googleCalEvent) {
     this.summary = googleCalEvent.summary;
-    let matches = googleCalEvent.summary.match(
+    let matches = this.summary.match(
       /^(?<studentName>\w+)\s+(?<subject>\w+).*\s+with\s+(?<tutorName>\w+)\s*(?:-\s*(?<status>.*\S)\s*)?$/
     );
     this.status = matches.groups.status;
@@ -165,10 +165,16 @@ TutoringSession.getSessionsStartingBetween = async (startTime, endTime) => {
   });
   const sessionsBetween = rawEventList
     .filter((x) => {
-      return Date.parse(x.start.dateTime) > startTime.getTime();
+      if((Date.parse(x.start.dateTime) > startTime.getTime()) && TutoringSession.isTutoringSession(x) ){
+        return true;
+      }
+      
     })
     .map((event) => {
-      return new TutoringSession(event);
+      
+        return new TutoringSession(event);
+      
+      
     });
   return Promise.resolve(sessionsBetween);
 };
@@ -179,6 +185,23 @@ TutoringSession.getSessions = (interval) => {
   const endTime = new Date(startTime.getTime() + 60 * 1000 * interval);
   return TutoringSession.getSessionsStartingBetween(startTime, endTime);
 };
+
+TutoringSession.isTutoringSession = (googleCalEvent) => {
+  let summary = googleCalEvent.summary;
+  let matches = summary.match(
+      /^(?<studentName>\w+)\s+(?<subject>\w+).*\s+with\s+(?<tutorName>\w+)\s*(?:-\s*(?<status>.*\S)\s*)?$/
+    );
+  console.log('groups' + matches.groups)
+  return matches ? true : false;
+  
+
+
+};
+
+
+
+
+
 
 // WARN: generic name not specific enough might change late with more session loggin capability \\\
 

@@ -21,6 +21,11 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
       withinPeriod: INTERVAL.leadTime,
       reminderType: "lastCall",
     });
+    TutoringSession.queueReminders({
+      withinPeriod: INTERVAL.day,
+      reminderType: "sessionToday",
+      timeZone: timeZone
+    });
 
     const attendeeCacheUpdater = new CronJob(
       "0 1 * * *",
