@@ -164,17 +164,16 @@ TutoringSession.getSessionsStartingBetween = async (startTime, endTime) => {
     endTime: endTime,
   });
   const sessionsBetween = rawEventList
-    .filter((x) => {
-      if((Date.parse(x.start.dateTime) > startTime.getTime()) && TutoringSession.isTutoringSession(x) ){
+    .filter((event) => {
+      if (
+        Date.parse(event.start.dateTime) > startTime.getTime() &&
+        TutoringSession.isTutoringSession(event)
+      ) {
         return true;
       }
-      
     })
-    .map((event) => {
-      
-        return new TutoringSession(event);
-      
-      
+    .map((filteredEvent) => {
+      return new TutoringSession(filteredEvent);
     });
   return Promise.resolve(sessionsBetween);
 };
@@ -189,19 +188,10 @@ TutoringSession.getSessions = (interval) => {
 TutoringSession.isTutoringSession = (googleCalEvent) => {
   let summary = googleCalEvent.summary;
   let matches = summary.match(
-      /^(?<studentName>\w+)\s+(?<subject>\w+).*\s+with\s+(?<tutorName>\w+)\s*(?:-\s*(?<status>.*\S)\s*)?$/
-    );
-  console.log('groups' + matches.groups)
+    /^(?<studentName>\w+)\s+(?<subject>\w+).*\s+with\s+(?<tutorName>\w+)\s*(?:-\s*(?<status>.*\S)\s*)?$/
+  );
   return matches ? true : false;
-  
-
-
 };
-
-
-
-
-
 
 // WARN: generic name not specific enough might change late with more session loggin capability \\\
 
