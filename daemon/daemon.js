@@ -69,5 +69,9 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
       timeZone
     );
     lastCallRemindersProcess.start();
+    //--------------------------------------------------------
+    //session log reminder process 
+    //TutoringSession.queueReminders({reminderType: "logReminder", withinPeriod: INTERVAL.leadTime})
+
   })
   .then(Reminder.updateSentReminderCacheIfStale);
