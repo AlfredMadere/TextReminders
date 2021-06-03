@@ -17,16 +17,17 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
     return Reminder.updateSentRemindersFromCache();
   })
   .then(() => {
-    TutoringSession.queueReminders({
-      withinPeriod: INTERVAL.leadTime,
-      reminderType: "lastCall",
-    });
-    TutoringSession.queueReminders({
-      withinPeriod: INTERVAL.day,
-      reminderType: "sessionToday",
-      timeZone: timeZone
-    });
-
+    if(!process.env.NODE_ENV === "production"){
+      TutoringSession.queueReminders({
+        withinPeriod: INTERVAL.leadTime,
+        reminderType: "lastCall",
+      });
+      TutoringSession.queueReminders({
+        withinPeriod: INTERVAL.day,
+        reminderType: "sessionToday",
+        timeZone: timeZone
+      });
+    }
     const attendeeCacheUpdater = new CronJob(
       "0 1 * * *",
       () => {
