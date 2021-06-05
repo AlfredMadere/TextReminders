@@ -59,6 +59,10 @@ class TutoringSession {
     return alertMessage;
   }
 
+  //create function called create reminders - will decide what reminder creating methods to call
+  //the two options as of now will be: sendSessionReminders and sendLogReminders
+
+  //rename to sendSessionReminders
   sendRemindersToParticipants(params) {
     //checks to make sure the session status doesn't prevent sending reminder
     //creates reminder objects for participants in the time zone
