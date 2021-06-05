@@ -10,6 +10,7 @@ const INTERVAL = {
   day: 60 * 18,
   leadTime: process.env.REMINDER_LEAD_TIME || 30,
 };
+
 const timeZone = "America/Chicago";
 
 Promise.all([Tutor.populateCache(), Student.populateCache()])
@@ -56,6 +57,7 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
       );
       sessionTodayRemindersProcess.start();
     });
+
     const lastCallRemindersProcess = new CronJob(
       "*/10 * * * *",
       () => {
@@ -70,6 +72,32 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
     );
     lastCallRemindersProcess.start();
     //--------------------------------------------------------
+/*
+
+log reminder Cron job
+call queue reminders
+ reminder type = logReminder
+ withinPeriod = retractionTime
+ 
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*/
     //session log reminder process 
     //TutoringSession.queueReminders({reminderType: "logReminder", withinPeriod: INTERVAL.leadTime})
 

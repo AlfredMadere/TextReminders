@@ -157,6 +157,8 @@ class TutoringSession {
   }
 }
 
+// add functionality and change name to getSessionsBetween, to get sessions that are either starting or ending in interval based on parameter
+
 TutoringSession.getSessionsStartingBetween = async (startTime, endTime) => {
   const rawEventList = await googleCalDriver.getEvents({
     calendarNamePatterns: TutoringSession.calendarNamePatterns,
@@ -181,7 +183,12 @@ TutoringSession.getSessionsStartingBetween = async (startTime, endTime) => {
 // WARN: generic name not specific enough might change late with more session loggin capability
 TutoringSession.getSessions = (interval) => {
   const startTime = new Date();
+
+    //create functionality to correct interval in the past if interval is negative
+
   const endTime = new Date(startTime.getTime() + 60 * 1000 * interval);
+
+  // change function call to include wether we are looking for starting or ending sessions
   return TutoringSession.getSessionsStartingBetween(startTime, endTime);
 };
 
@@ -196,6 +203,8 @@ TutoringSession.isTutoringSession = (googleCalEvent) => {
 // WARN: generic name not specific enough might change late with more session loggin capability \\\
 
 TutoringSession.queueReminders = async (params) => {
+//add parameter to get sessions to determine if we are looking for ending sessionns or starting sessions
+
   const sessionList = await TutoringSession.getSessions(params.withinPeriod);
   if (sessionList.length) {
     sessionList.forEach(async (session) => {
