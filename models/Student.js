@@ -46,4 +46,9 @@ Student.find = (name) => {
   return Student.cache[name];
 };
 
+Student.fromBareObj = (bareObj) => {
+  let s = _.cloneDeep(bareObj);
+  Object.setPrototypeOf(s,Student.prototype);
+}
+
 export default Student;

@@ -40,4 +40,10 @@ Tutor.populateCache = () => {
     .catch((err) => console.log(err));
 };
 
+Tutor.fromBareObj = (bareObj) => {
+  let t = _.cloneDeep(bareObj);
+  Object.setPrototypeOf(t,Tutor.prototype);
+}
+
+
 export default Tutor;

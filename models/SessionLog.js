@@ -1,3 +1,7 @@
+import _ from 'lodash';
+import s3LogCache from './modules/s3LogCache.js';
+
+
 class SessionLog {
   constructor(params) {
     this.session = params.session;
