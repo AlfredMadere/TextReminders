@@ -7,6 +7,7 @@ import TutoringSession from "../models/TutoringSession.js";
 import Reminder from "../models/Reminder.js";
 import SessionLog from "../models/SessionLog.js"
 import remindTutorsToLog from "../controllers/loggerController.js"
+import { queueLogReminders } from "../controllers/reminderController.js";
 
 const INTERVAL = {
   day: 60 * 18,
@@ -18,11 +19,11 @@ const timeZone = "America/Chicago";
 Promise.all([Tutor.populateCache(), Student.populateCache(), Reminder.populateSentReminderCacheFromStore(), SessionLog.populateSessionLogCacheFromStore()])
   .then(() => {
     if(!process.env.NODE_ENV === "production"){
-      TutoringSession.queueReminders({
+      queueSessionReminders({
         withinPeriod: INTERVAL.leadTime,
         reminderType: "lastCall",
       });
-      TutoringSession.queueReminders({
+      queueSessionReminders({
         withinPeriod: INTERVAL.day,
         reminderType: "sessionToday",
         timeZone: timeZone
