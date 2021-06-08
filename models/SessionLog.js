@@ -6,7 +6,7 @@ class SessionLog {
   constructor(params) {
     this.session = params.session;
     this.id = params.session.id;
-    this.recordOnRemote();
+    //this.recordOnRemote();
   }
   
   recordOnRemote() {
@@ -70,7 +70,7 @@ SessionLog.populateSessionLogCacheFromStore = async () => {
 };
 SessionLog.fromBareObj = (bareObj) => {
     let sl = _.cloneDeep(bareObj);
-    Object.setPrototypeOf(sl,SessionLog.prototype);
+    Object.setPrototypeOf(sl, SessionLog.prototype);
     sl.session = TutoringSession.fromBareObj(sl.session);
 }
 
@@ -78,3 +78,5 @@ SessionLog.cache = [];
 SessionLog.noActionStatuses = ["unloggable"];
 
 export default SessionLog;
+
+
