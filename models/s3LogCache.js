@@ -16,7 +16,7 @@ class s3LogCache {
         }
         return val === {} ? null : val; // Translate 404 to null so we don't check again
     }
-    
+
     async putObj (key, data) {
         return uploadToAWS(data, key, S3_LOGGER_BUCKET).then(() => {
             this.writeThroughCache[key] = data;
@@ -37,3 +37,4 @@ class s3LogCache {
         }
     }
 }
+export default s3LogCache;

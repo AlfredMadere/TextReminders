@@ -1,20 +1,18 @@
 import _ from 'lodash';
-import s3LogCache from './modules/s3LogCache.js';
+import s3LogCache from './s3LogCache.js';
 
 
 class SessionLog {
-  constructor(params) {
+ constructor(params) {
     this.session = params.session;
     this.id = params.session.id;
+    if (!(s3LogCache.hasKey(this.id))) {
+      putObj(this.id,this).then((res) => {console.log(res)}).catch((err) => {console.log(err)});
+    } 
     //this.recordOnRemote();
   }
   
-  recordOnRemote() {
-    if (!SessionLog.cache.includes(this.id)) {
-      const uploadedTingos = await uploadToAWS(this, this.id, "loggerappcache");
-      SessionLog.cache.push(this.id);
-    }
-  }
+  
   missingTutorMessage() {
     let message = `Null tutor for ${this.session.summary}, you should log this by hand`;
     return message;

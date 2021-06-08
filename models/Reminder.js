@@ -3,7 +3,7 @@ import sendText from "../drivers/twilioDriver.js";
 import TutoringSession from "../models/TutoringSession.js";
 import uploadToAWS from "../drivers/awsDriver.js";
 import { downloadFromAWS } from "../drivers/awsDriver.js";
-import { downloadFromAWS } from "../drivers/awsDriver.js";
+
 
 import moment from "moment-timezone";
 
