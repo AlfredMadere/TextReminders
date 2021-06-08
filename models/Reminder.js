@@ -3,6 +3,8 @@ import sendText from "../drivers/twilioDriver.js";
 import TutoringSession from "../models/TutoringSession.js";
 import uploadToAWS from "../drivers/awsDriver.js";
 import { downloadFromAWS } from "../drivers/awsDriver.js";
+import { downloadFromAWS } from "../drivers/awsDriver.js";
+
 import moment from "moment-timezone";
 
 
@@ -60,7 +62,7 @@ class Reminder {
 Reminder.sent = [];
 Reminder.lastCacheContent;
 
-Reminder.updateSentReminderCacheIfStale = async () => {
+Reminder.updateSentReminderStoreIfStale = async () => {
   let currentCacheContent = JSON.stringify(Reminder.sent);
   if (!(Reminder.lastCacheContent === currentCacheContent)) {
     console.log("updating aws");
@@ -73,13 +75,13 @@ Reminder.updateSentReminderCacheIfStale = async () => {
     return uploadedTingos;
   }
   setTimeout(
-    Reminder.updateSentReminderCacheIfStale,
+    Reminder.updateSentReminderStoreIfStale,
     REMINDER_CACHE_UPDATE_INTERVAL
   );
 };
 
-Reminder.updateSentRemindersFromCache = async () => {
-  const sentReminderString = await downloadFromAWS(
+Reminder.populateSentReminderCacheFromStore = async () => {
+  const sessionLogs = await downloadFromAWS(
     textReminderCacheKey,
     "reminderappcache"
   );

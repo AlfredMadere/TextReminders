@@ -5,6 +5,8 @@ import Tutor from "../models/Tutor.js";
 import Student from "../models/Student.js";
 import TutoringSession from "../models/TutoringSession.js";
 import Reminder from "../models/Reminder.js";
+import SessionLog from "../models/SessionLog.js"
+import remindTutorsToLog from "../controllers/loggerController.js"
 
 const INTERVAL = {
   day: 60 * 18,
@@ -13,10 +15,7 @@ const INTERVAL = {
 
 const timeZone = "America/Chicago";
 
-Promise.all([Tutor.populateCache(), Student.populateCache()])
-  .then(() => {
-    return Reminder.updateSentRemindersFromCache();
-  })
+Promise.all([Tutor.populateCache(), Student.populateCache(), Reminder.populateSentReminderCacheFromStore(), SessionLog.populateSessionLogCacheFromStore()])
   .then(() => {
     if(!process.env.NODE_ENV === "production"){
       TutoringSession.queueReminders({
@@ -27,6 +26,10 @@ Promise.all([Tutor.populateCache(), Student.populateCache()])
         withinPeriod: INTERVAL.day,
         reminderType: "sessionToday",
         timeZone: timeZone
+      });
+      queueLogReminders({
+        withinPeriod: INTERVAL.logLatency,
+        reminderType: "immediateLogReminder",
       });
     }
     const attendeeCacheUpdater = new CronJob(

@@ -62,6 +62,17 @@ const downloadFromAWS = async (key, bucket) => {
   }
 };
 
+const listObjects = async (bucketParams) => {
+  try {
+    const data = s3.listObjects(bucketParams).promise();
+    return data;
+  } catch (e) {
+    throw new Error(`Had issue getting list of objects in ${bucketParams.bucket}`);
+  }
+}
+
+
+
 export default uploadToAWS;
 
-export { downloadFromAWS, readLocalFile, writeS3File };
+export { downloadFromAWS, readLocalFile, writeS3File, listObjects };
