@@ -5,20 +5,32 @@ import Tutor from "../models/Tutor.js";
 import Student from "../models/Student.js";
 import TutoringSession from "../models/TutoringSession.js";
 import Reminder from "../models/Reminder.js";
-import SessionLog from "../models/SessionLog.js"
-import remindTutorsToLog from "../controllers/loggerController.js"
-import { queueLogReminders } from "../controllers/reminderController.js";
+import SessionLog from "../models/SessionLog.js";
+import {
+  queueLogReminders,
+  queueSessionReminders,
+} from "../controllers/reminderController.js";
+import S3LogCache from "../models/S3LogCache.js";
 
 const INTERVAL = {
   day: 60 * 18,
   leadTime: process.env.REMINDER_LEAD_TIME || 30,
+  logLatency: -50,
 };
 
 const timeZone = "America/Chicago";
-
-Promise.all([Tutor.populateCache(), Student.populateCache(), Reminder.populateSentReminderCacheFromStore(), SessionLog.populateSessionLogCacheFromStore()])
+Promise.all([
+  Tutor.populateCache(),
+  Student.populateCache(),
+  Reminder.populateSentReminderCacheFromStore(),
+  S3LogCache.initSingleton(),
+])
   .then(() => {
-    if(!process.env.NODE_ENV === "production"){
+    if (!(process.env.NODE_ENV === "production")) {
+      queueLogReminders({
+        withinPeriod: INTERVAL.logLatency,
+        reminderType: "immediateLogReminder",
+      });
       queueSessionReminders({
         withinPeriod: INTERVAL.leadTime,
         reminderType: "lastCall",
@@ -26,11 +38,7 @@ Promise.all([Tutor.populateCache(), Student.populateCache(), Reminder.populateSe
       queueSessionReminders({
         withinPeriod: INTERVAL.day,
         reminderType: "sessionToday",
-        timeZone: timeZone
-      });
-      queueLogReminders({
-        withinPeriod: INTERVAL.logLatency,
-        reminderType: "immediateLogReminder",
+        timeZone: timeZone,
       });
     }
     const attendeeCacheUpdater = new CronJob(
@@ -76,7 +84,7 @@ Promise.all([Tutor.populateCache(), Student.populateCache(), Reminder.populateSe
     );
     lastCallRemindersProcess.start();
     //--------------------------------------------------------
-/*
+    /*
 
 log reminder Cron job
 call queue reminders
@@ -102,8 +110,7 @@ call queue reminders
 
 
 */
-    //session log reminder process 
+    //session log reminder process
     //TutoringSession.queueReminders({reminderType: "logReminder", withinPeriod: INTERVAL.leadTime})
-
   })
-  .then(Reminder.updateSentReminderCacheIfStale);
+  .then(Reminder.updateSentReminderStoreIfStale);

@@ -14,9 +14,10 @@ class Student {
   }
 }
 
-Student.cache = {};
+Student.cache = null;
 
 Student.populateCache = () => {
+  Student.cache = {};
   return getDataFor("student")
     .then((columns) => {
       if (columns.length) {
@@ -43,12 +44,16 @@ Student.populateCache = () => {
 };
 
 Student.find = (name) => {
-  return Student.cache[name];
+  if (Student.cache) {
+    return Student.cache[name];
+  } else {
+    throw new Error("Student cache not initialized");
+  }
 };
 
 Student.fromBareObj = (bareObj) => {
   let s = _.cloneDeep(bareObj);
-  Object.setPrototypeOf(s,Student.prototype);
-}
+  Object.setPrototypeOf(s, Student.prototype);
+};
 
 export default Student;

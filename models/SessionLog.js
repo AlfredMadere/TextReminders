@@ -1,35 +1,45 @@
-import _ from 'lodash';
-import s3LogCache from './s3LogCache.js';
-
+import _ from "lodash";
+import S3LogCache from "./S3LogCache.js";
+import Alert from "./SessionAlert.js";
+import Reminder from "./Reminder.js";
 
 class SessionLog {
- constructor(params) {
+  constructor(params) {
     this.session = params.session;
     this.id = params.session.id;
-    if (!(s3LogCache.hasKey(this.id))) {
-      putObj(this.id,this).then((res) => {console.log(res)}).catch((err) => {console.log(err)});
-    } 
-    //this.recordOnRemote();
+    console.log("session log id", this.id);
   }
-  
-  
+
+  async addToS3Cache() {
+    try {
+      if (!S3LogCache.singleton().hasKey(this.id)) {
+        await S3LogCache.singleton().putObj(this.id, this);
+      }
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
   missingTutorMessage() {
     let message = `Null tutor for ${this.session.summary}, you should log this by hand`;
     return message;
   }
   logReminderMessage(params) {
-    let message = `Log your ${params.type === "justend" ? "recent" : "past"} session with title "${
+    let message = `Log your ${
+      params.type === "immediateLogReminder" ? "recent" : "past"
+    } session with title "${
       this.session.summary
     }" by clicking: service.ivy-advantage.com/logger/${this.id}`;
     return message;
   }
   remindTutor(params) {
+    const reminders = [];
+    const alerts = [];
     if (SessionLog.noActionStatuses.includes(this.session.status)) {
       console.log(
         `No Action status for log ${this.session.summary}: ${this.session.status}`
       );
     } else {
-      if (this.tutor) {
+      if (this.session.tutor) {
         reminders.push(
           new Reminder({
             session: this.session,
@@ -67,14 +77,12 @@ SessionLog.populateSessionLogCacheFromStore = async () => {
   return SessionLog.cache;
 };
 SessionLog.fromBareObj = (bareObj) => {
-    let sl = _.cloneDeep(bareObj);
-    Object.setPrototypeOf(sl, SessionLog.prototype);
-    sl.session = TutoringSession.fromBareObj(sl.session);
-}
+  let sl = _.cloneDeep(bareObj);
+  Object.setPrototypeOf(sl, SessionLog.prototype);
+  sl.session = TutoringSession.fromBareObj(sl.session);
+};
 
 SessionLog.cache = [];
 SessionLog.noActionStatuses = ["unloggable"];
 
 export default SessionLog;
-
-

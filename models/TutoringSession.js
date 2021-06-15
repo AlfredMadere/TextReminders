@@ -5,6 +5,7 @@ import Reminder from "./Reminder.js";
 import Alert from "./SessionAlert.js";
 import googleCalDriver from "../drivers/googleCalDriver.js";
 import moment from "moment-timezone";
+import _ from "lodash";
 
 class TutoringSession {
   constructor(googleCalEvent) {
@@ -18,11 +19,11 @@ class TutoringSession {
     this.parent = this.student
       ? Student.find(matches.groups.studentName).parent
       : null;
-
     this.tutor = Tutor.find(matches.groups.tutorName);
     this.startTime = DateTime.fromISO(googleCalEvent.start.dateTime);
     this.id = googleCalEvent.id;
     this.calendar = googleCalEvent.organizer.displayName;
+
     // this.state = googleCalEvent.state;
   }
   sessionReminderText(params) {
@@ -58,9 +59,6 @@ class TutoringSession {
     } at ${rezonedStartTime.toLocaleString(DateTime.DATETIME_SHORT)}`;
     return alertMessage;
   }
-
-  //create function called create reminders - will decide what reminder creating methods to call
-  //the two options as of now will be: sendSessionReminders and sendLogReminders
 
   //rename to sendSessionReminders
   sendRemindersToParticipants(params) {
@@ -161,39 +159,19 @@ class TutoringSession {
   }
 }
 
-// add functionality and change name to getSessionsBetween, to get sessions that are either starting or ending in interval based on parameter
-
-TutoringSession.getSessionsStartingBetween = async (startTime, endTime) => {
+//I need some fucking help with this
+TutoringSession.getSessionsThat = async (interval, condition) => {
   const rawEventList = await googleCalDriver.getEvents({
     calendarNamePatterns: TutoringSession.calendarNamePatterns,
-    startTime: startTime,
-    endTime: endTime,
+    startTime: interval.startTime,
+    endTime: interval.endTime,
   });
   const sessionsBetween = rawEventList
-    .filter((event) => {
-      if (
-        Date.parse(event.start.dateTime) > startTime.getTime() &&
-        TutoringSession.isTutoringSession(event)
-      ) {
-        return true;
-      }
-    })
+    .filter(condition)
     .map((filteredEvent) => {
       return new TutoringSession(filteredEvent);
     });
   return Promise.resolve(sessionsBetween);
-};
-
-// WARN: generic name not specific enough might change late with more session loggin capability
-TutoringSession.getSessions = (interval) => {
-  const startTime = new Date();
-
-    //create functionality to correct interval in the past if interval is negative
-
-  const endTime = new Date(startTime.getTime() + 60 * 1000 * interval);
-
-  // change function call to include wether we are looking for starting or ending sessions
-  return TutoringSession.getSessionsStartingBetween(startTime, endTime);
 };
 
 TutoringSession.isTutoringSession = (googleCalEvent) => {
@@ -204,43 +182,9 @@ TutoringSession.isTutoringSession = (googleCalEvent) => {
   return matches ? true : false;
 };
 
-// WARN: generic name not specific enough might change late with more session loggin capability \\\
-
-TutoringSession.queueReminders = async (params) => {
-//add parameter to get sessions to determine if we are looking for ending sessionns or starting sessions
-
-  const sessionList = await TutoringSession.getSessions(params.withinPeriod);
-  if (sessionList.length) {
-    sessionList.forEach(async (session) => {
-      session.sendRemindersToParticipants({
-        type: params.reminderType,
-        tz: params.timeZone,
-      });
-    });
-  }
-};
-/* DEPRICATED
-TutoringSession.getTodaysSessions = () => {
-  const startTime = new Date();
-  let endTime = new Date(startTime.getTime() + 60 * 60 * 18 * 1000);
-  return TutoringSession.getSessionsStartingBetween(startTime, endTime);
-};
-*/
-
-TutoringSession.fromBareObj = (bareObj) => {
-  let ts = _.cloneDeep(bareObj);
-  Object.setPrototypeOf(ts,TutoringSession.prototype);
-  ts.tutor = Tutor.fromBareObj(ts.tutor);
-  ts.student = Student.fromBareObj(ts.student);
-}
-
-
-
-
-
-
 TutoringSession.noActionStatuses = [
   "pending reschedule",
+  "rescheduling",
   "cancelled",
   "meeting",
 ];

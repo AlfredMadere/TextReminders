@@ -10,14 +10,18 @@ class Tutor {
   }
 }
 
-Tutor.cache = {};
+Tutor.cache = null;
 
 Tutor.find = (name) => {
-  return Tutor.cache[name];
+  if (Tutor.cache) {
+    return Tutor.cache[name];
+  } else {
+    throw new Error("Tutor cache not initialized");
+  }
 };
 
-
 Tutor.populateCache = () => {
+  Tutor.cache = {};
   return getDataFor("tutor")
     .then((columns) => {
       if (columns.length) {
@@ -42,8 +46,7 @@ Tutor.populateCache = () => {
 
 Tutor.fromBareObj = (bareObj) => {
   let t = _.cloneDeep(bareObj);
-  Object.setPrototypeOf(t,Tutor.prototype);
-}
-
+  Object.setPrototypeOf(t, Tutor.prototype);
+};
 
 export default Tutor;

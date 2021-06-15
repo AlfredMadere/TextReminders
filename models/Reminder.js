@@ -4,9 +4,7 @@ import TutoringSession from "../models/TutoringSession.js";
 import uploadToAWS from "../drivers/awsDriver.js";
 import { downloadFromAWS } from "../drivers/awsDriver.js";
 
-
 import moment from "moment-timezone";
-
 
 const textReminderCacheKey =
   process.env.NODE_ENV === "production"
@@ -27,7 +25,7 @@ class Reminder {
       this.type;
     this.message = params.message;
     this.recipientRole = params.recipientRole;
-    if(!(process.env.NODE_ENV === "production")){
+    if (!(process.env.NODE_ENV === "production")) {
       this.message = `${this.message} [${process.env.NODE_ENV}]`;
     }
   }
@@ -35,11 +33,17 @@ class Reminder {
     //set message to print based on whether or not NODE_ENV is production
     let modeIsProduction = process.env.NODE_ENV === "production" ? true : false;
     console.log(
-      `Sending reminder ${modeIsProduction ? "to live number" : "to dev team"} from calendar ${this.session.calendar} in ${process.env.NODE_ENV} mode:`,
+      `Sending reminder ${
+        modeIsProduction ? "to live number" : "to dev team"
+      } from calendar ${this.session.calendar} in ${
+        process.env.NODE_ENV
+      } mode:`,
       JSON.stringify(this, null, 4)
     );
     sendText({
-      number: modeIsProduction ? this.recipient.number : (process.env.DEV_PHONE || "5122990497"),
+      number: modeIsProduction
+        ? this.recipient.number
+        : process.env.DEV_PHONE || "5122990497",
       message: this.message,
     });
   }
@@ -50,19 +54,19 @@ class Reminder {
     if (!(this.id in Reminder.sent)) {
       if (this.recipient.number) {
         this.sendAndPrintReminder();
-      }else{
+      } else {
         console.log("No number available for: ", this.recipient);
       }
       Reminder.sent[this.id] = 1;
     }
-    
   }
 }
 
-Reminder.sent = [];
+Reminder.sent = {};
 Reminder.lastCacheContent;
 
 Reminder.updateSentReminderStoreIfStale = async () => {
+  console.log("checking if this bitch stale");
   let currentCacheContent = JSON.stringify(Reminder.sent);
   if (!(Reminder.lastCacheContent === currentCacheContent)) {
     console.log("updating aws");
@@ -81,7 +85,7 @@ Reminder.updateSentReminderStoreIfStale = async () => {
 };
 
 Reminder.populateSentReminderCacheFromStore = async () => {
-  const sessionLogs = await downloadFromAWS(
+  const sentReminderString = await downloadFromAWS(
     textReminderCacheKey,
     "reminderappcache"
   );
