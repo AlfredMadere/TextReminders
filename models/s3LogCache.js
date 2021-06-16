@@ -19,7 +19,7 @@ class S3LogCache {
   }
   async getObj(key) {
     let val = this.writeThroughCache[key];
-    if (val === null) {
+    if (val === null || val === undefined) {
       val = await downloadFromAWS(key, S3_LOGGER_BUCKET);
       this.writeThroughCache[key] = val;
     }
@@ -27,14 +27,21 @@ class S3LogCache {
   }
 
   async putObj(key, data) {
-    return uploadToAWS(data, key, S3_LOGGER_BUCKET).then(() => {
-      this.writeThroughCache[key] = data;
-    });
+    if (
+      this.writeThroughCache[key] &&
+      JSON.stringify(this.writeThroughCache[key]) === JSON.stringify(data)
+    ) {
+      return;
+    } else {
+      return uploadToAWS(data, key, S3_LOGGER_BUCKET).then(() => {
+        this.writeThroughCache[key] = data;
+      });
+    }
   }
 
   hasKey(key) {
     let val = this.writeThroughCache[key];
-    return !(val === {} || val === null || val === undefined);
+    return !(val === {} || val === undefined);
   }
 
   async getSessionLog(key) {
@@ -56,9 +63,9 @@ S3LogCache.initSingleton = async () => {
 };
 
 S3LogCache.singleton = () => {
-    if (!theOneCache) {
-      throw new Error('singleton has not been inited');
-    }
-    return theOneCache;
-  };
+  if (!theOneCache) {
+    throw new Error("singleton has not been inited");
+  }
+  return theOneCache;
+};
 export default S3LogCache;

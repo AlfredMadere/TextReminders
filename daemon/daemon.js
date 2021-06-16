@@ -6,11 +6,13 @@ import Student from "../models/Student.js";
 import TutoringSession from "../models/TutoringSession.js";
 import Reminder from "../models/Reminder.js";
 import SessionLog from "../models/SessionLog.js";
+import getSessionInfo from "../controllers/loggerController.js";
 import {
   queueLogReminders,
   queueSessionReminders,
 } from "../controllers/reminderController.js";
 import S3LogCache from "../models/S3LogCache.js";
+import getLogInfo from "../controllers/loggerController.js";
 
 const INTERVAL = {
   day: 60 * 18,
@@ -40,7 +42,9 @@ Promise.all([
         reminderType: "sessionToday",
         timeZone: timeZone,
       });
+      getLogInfo("1b0beuud362q0hmgrk3vmkbv4o");
     }
+
     const attendeeCacheUpdater = new CronJob(
       "0 1 * * *",
       () => {
