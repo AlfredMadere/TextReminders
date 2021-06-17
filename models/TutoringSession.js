@@ -182,6 +182,15 @@ TutoringSession.isTutoringSession = (googleCalEvent) => {
   return matches ? true : false;
 };
 
+TutoringSession.fromBareObj = (bareObj) => {
+  let ts = _.cloneDeep(bareObj);
+  Object.setPrototypeOf(ts, TutoringSession.prototype);
+  ts.student = Student.fromBareObj(ts.student);
+  ts.tutor = Tutor.fromBareObj(ts.tutor);
+  return ts;
+};
+
+
 TutoringSession.noActionStatuses = [
   "pending reschedule",
   "rescheduling",

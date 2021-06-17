@@ -19,7 +19,7 @@ const spreadsheets = {
   },
   tutor: {
     spreadsheetId: "1KLdLm1a9EExiV-LuADff8dnMX4nqIUhRJlToeFbegFk",
-    range: "Tutors!C4:9",
+    range: "Tutors!C4:11",
     majorDimension: "COLUMNS",
   },
 };
@@ -77,13 +77,33 @@ const getDataFor = (modelType) => {
     .catch((err) => console.log(err));
 };
 
-const sheetContains = async (sheetId, data) => {
-  try{
+const getDataFromSheet = async (sheetId, range) => {
+  try {
     const gSheets = await getGoogleSheets();
-  }catch (e) {
-
+    const request = {
+      spreadsheetId: sheetId,
+      range: range,
+      valueRenderOption: "FORMATTED_VALUE",
+      dateTimeRenderOption: "FORMATTED_STRING",
+    };
+    const response = (await gSheets.spreadsheets.values.get(request)).data;
+    return response.values;
+  } catch (e) {
+    throw new Error("Error getting data from sheet: ", e);
   }
-}
+};
 
+const getSheetIdFromURL = (url) => {
+  //https://docs.google.com/spreadsheets/d/1RM_pqGz3QN3lhbOluSP7wdPP_EkKFJByTywV_cmFaiA/edit#gid=0
+  //https://docs.google.com/spreadsheets/d/1Am3uQeGI9RjRUrmN_kAmi8aV06QeDUTMFP580o4U0XE/edit#gid=0
+  if (url) {
+    let matches = url.match(/spreadsheets\/d\/(?<sheetId>\w+)\//);
+    console.log("matches", matches);
+    return matches ? matches.groups.sheetId : "";
+  } else {
+    return;
+  }
+};
 
 export default getDataFor;
+export { getDataFromSheet, getSheetIdFromURL };

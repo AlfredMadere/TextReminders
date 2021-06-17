@@ -2,14 +2,37 @@ import _ from "lodash";
 import S3LogCache from "./S3LogCache.js";
 import Alert from "./SessionAlert.js";
 import Reminder from "./Reminder.js";
-
+import { getDataFromSheet } from "../drivers/googleSheetsDriver.js";
+import TutoringSession from "./TutoringSession.js";
+const SHEET_LOG_INFO_RANGE = "A4:F";
 class SessionLog {
   constructor(params) {
     this.session = params.session;
     this.id = params.session.id;
     console.log("session log id", this.id);
   }
-
+  async recorded() {
+    try {
+      let tutor = this.session.tutor;
+      let student = this.session.student;
+      let sheetId = tutor.sheetId;
+      console.log("student", student);
+      let sheetRange = `${student.identifier}!${SHEET_LOG_INFO_RANGE}`;
+      console.log("sheetRange", sheetRange);
+      const response = await getDataFromSheet(sheetId, sheetRange);
+      response.forEach((log) => {
+        let id = log[0];
+        if (id === this.id) {
+          console.log("returning true");
+          return true;
+        }
+      });
+    } catch (e) {
+      //get a list of all sheets on given spreadsheet
+      //get data from all of those sheets, see if the idea is included in any of that data
+      console.log(e);
+    }
+  }
   async addToS3Cache() {
     try {
       await S3LogCache.singleton().putObj(this.id, this);
@@ -78,6 +101,7 @@ SessionLog.fromBareObj = (bareObj) => {
   let sl = _.cloneDeep(bareObj);
   Object.setPrototypeOf(sl, SessionLog.prototype);
   sl.session = TutoringSession.fromBareObj(sl.session);
+  return sl;
 };
 
 SessionLog.cache = [];

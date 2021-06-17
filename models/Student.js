@@ -1,4 +1,5 @@
 import getDataFor from "../drivers/googleSheetsDriver.js";
+import _ from "lodash";
 
 class Student {
   constructor(params) {
@@ -11,6 +12,7 @@ class Student {
       email: params.parentEmail,
     };
     this.timezone = params.timezone;
+    this.identifier = params.identifier;
   }
 }
 
@@ -23,6 +25,7 @@ Student.populateCache = () => {
       if (columns.length) {
         let newCache = {};
         columns.forEach((column) => {
+          console.log(column[3]);
           if (column.length > 0) {
             newCache[column[0]] = new Student({
               parentName: column[1],
@@ -32,6 +35,7 @@ Student.populateCache = () => {
               parentNumber: column[6],
               parentEmail: column[7],
               timezone: column[8],
+              identifier: column[0],
             });
           }
         });
@@ -54,6 +58,7 @@ Student.find = (name) => {
 Student.fromBareObj = (bareObj) => {
   let s = _.cloneDeep(bareObj);
   Object.setPrototypeOf(s, Student.prototype);
+  return s;
 };
 
 export default Student;

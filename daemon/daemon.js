@@ -42,7 +42,7 @@ Promise.all([
         reminderType: "sessionToday",
         timeZone: timeZone,
       });
-      getLogInfo("1b0beuud362q0hmgrk3vmkbv4o");
+      getLogInfo("3vt83p6vho51dq0t5coqmcs413");
     }
 
     const attendeeCacheUpdater = new CronJob(

@@ -33,7 +33,7 @@ class S3LogCache {
     ) {
       return;
     } else {
-        console.log("actually writing to s3log remote");
+      console.log("actually writing to s3log remote");
       return uploadToAWS(data, key, S3_LOGGER_BUCKET).then(() => {
         this.writeThroughCache[key] = data;
       });
@@ -46,7 +46,7 @@ class S3LogCache {
   }
 
   async getSessionLog(key) {
-    let obj = await getObj(key);
+    let obj = await this.getObj(key);
     if (obj) {
       return SessionLog.fromBareObj(obj);
     } else {
