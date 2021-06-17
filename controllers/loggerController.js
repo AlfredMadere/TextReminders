@@ -7,7 +7,10 @@ const getLogInfo = async (id) => {
   if (S3LogCache.singleton().hasKey(id)) {
     console.log("Things are good and we can start the logging process");
     const s3Log = await S3LogCache.singleton().getSessionLog(id);
-    if(sheetContains(s3Log.tutor, id)){
+    console.log("type of s3log", typeof s3Log);
+    console.log("s3log", s3log);
+
+    if(sheetContains(s3Log.tutor.sheet, id)){
         console.log("need to get data and edit the session log")
     }
     console.log("server this log to client: ", s3Log);

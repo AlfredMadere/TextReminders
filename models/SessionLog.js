@@ -12,9 +12,7 @@ class SessionLog {
 
   async addToS3Cache() {
     try {
-      if (!S3LogCache.singleton().hasKey(this.id)) {
-        await S3LogCache.singleton().putObj(this.id, this);
-      }
+      await S3LogCache.singleton().putObj(this.id, this);
     } catch (e) {
       throw new Error(e);
     }

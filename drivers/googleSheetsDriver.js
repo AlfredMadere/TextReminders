@@ -77,6 +77,13 @@ const getDataFor = (modelType) => {
     .catch((err) => console.log(err));
 };
 
+const sheetContains = async (sheetId, data) => {
+  try{
+    const gSheets = await getGoogleSheets();
+  }catch (e) {
+
+  }
+}
 
 
 export default getDataFor;

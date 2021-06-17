@@ -33,6 +33,7 @@ class S3LogCache {
     ) {
       return;
     } else {
+        console.log("actually writing to s3log remote");
       return uploadToAWS(data, key, S3_LOGGER_BUCKET).then(() => {
         this.writeThroughCache[key] = data;
       });
