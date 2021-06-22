@@ -42,7 +42,7 @@ Promise.all([
         reminderType: "sessionToday",
         timeZone: timeZone,
       });
-      getLogInfo("3vt83p6vho51dq0t5coqmcs413");
+      getLogInfo("6u48rdva92f2igdkipl3iqjbuj");
     }
 
     const attendeeCacheUpdater = new CronJob(
@@ -61,10 +61,10 @@ Promise.all([
       const sessionTodayRemindersProcess = new CronJob(
         "0 9 * * *",
         () => {
-          TutoringSession.queueReminders({
-            reminderType: "sessionToday",
-            timeZone: tz,
+          queueSessionReminders({
             withinPeriod: INTERVAL.day,
+            reminderType: "sessionToday",
+            timeZone: timeZone,
           });
         },
         null,
@@ -77,9 +77,9 @@ Promise.all([
     const lastCallRemindersProcess = new CronJob(
       "*/10 * * * *",
       () => {
-        TutoringSession.queueReminders({
-          reminderType: "lastCall",
+        queueSessionReminders({
           withinPeriod: INTERVAL.leadTime,
+          reminderType: "lastCall",
         });
       },
       null,

@@ -25,7 +25,6 @@ Student.populateCache = () => {
       if (columns.length) {
         let newCache = {};
         columns.forEach((column) => {
-          console.log(column[3]);
           if (column.length > 0) {
             newCache[column[0]] = new Student({
               parentName: column[1],

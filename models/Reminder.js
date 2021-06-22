@@ -66,7 +66,6 @@ Reminder.sent = {};
 Reminder.lastCacheContent;
 
 Reminder.updateSentReminderStoreIfStale = async () => {
-  console.log("checking if this bitch stale");
   let currentCacheContent = JSON.stringify(Reminder.sent);
   if (!(Reminder.lastCacheContent === currentCacheContent)) {
     console.log("updating aws");

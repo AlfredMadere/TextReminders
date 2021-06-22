@@ -98,7 +98,6 @@ const getSheetIdFromURL = (url) => {
   //https://docs.google.com/spreadsheets/d/1Am3uQeGI9RjRUrmN_kAmi8aV06QeDUTMFP580o4U0XE/edit#gid=0
   if (url) {
     let matches = url.match(/spreadsheets\/d\/(?<sheetId>\w+)\//);
-    console.log("matches", matches);
     return matches ? matches.groups.sheetId : "";
   } else {
     return;

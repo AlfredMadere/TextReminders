@@ -29,7 +29,6 @@ Tutor.populateCache = () => {
   Tutor.cache = {};
   return getDataFor("tutor")
     .then((columns) => {
-      console.log("tutor data", columns, null, 2);
       if (columns.length) {
         let newCache = {};
         columns.forEach((column) => {

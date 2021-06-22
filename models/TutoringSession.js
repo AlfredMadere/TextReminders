@@ -21,6 +21,7 @@ class TutoringSession {
       : null;
     this.tutor = Tutor.find(matches.groups.tutorName);
     this.startTime = DateTime.fromISO(googleCalEvent.start.dateTime);
+    this.endTime = DateTime.fromISO(googleCalEvent.end.dateTime);
     this.id = googleCalEvent.id;
     this.calendar = googleCalEvent.organizer.displayName;
 
